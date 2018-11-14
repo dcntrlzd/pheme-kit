@@ -1,7 +1,6 @@
 {
   "name": "pheme-protocol",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.1.0",
   "license": "MIT",
   "devDependencies": {
     "lerna": "^3.4.3"
