@@ -1,0 +1,24 @@
+{
+  "name": "pheme",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "Baris Gumustas <barisgumustas@gmail.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "lib/pheme.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "jest": "^23.6.0"
+  }
+}

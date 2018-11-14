@@ -1,0 +1,26 @@
+{
+  "name": "pheme-contracts",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "Baris Gumustas <barisgumustas@gmail.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "lib/pheme-contracts.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "devDependencies": {
+    "truffle": "^4.1.14",
+    "web3-utils": "^1.0.0-beta.36"
+  }
+}
