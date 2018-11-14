@@ -15,11 +15,5 @@
   ],
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com"
-  },
-  "scripts": {
-    "test": "jest"
-  },
-  "dependencies": {
-    "jest": "^23.6.0"
   }
 }
