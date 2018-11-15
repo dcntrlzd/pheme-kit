@@ -5,6 +5,8 @@
   "devDependencies": {
     "@types/jest": "^23.3.9",
     "@types/node": "^10.12.7",
+    "@types/uuid": "^3.4.3",
+    "@types/bn.js": "^4.11.3",
     "jest": "^23.6.0",
     "lerna": "^3.4.3",
     "ts-jest": "^23.10.4",

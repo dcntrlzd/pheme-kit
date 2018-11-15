@@ -15,5 +15,10 @@
   ],
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com"
+  },
+  "dependencies": {
+    "@dcntrlzd/pheme": "^0.0.0",
+    "axios": "^0.18.0",
+    "ipfs-api": "^26.1.2"
   }
 }
