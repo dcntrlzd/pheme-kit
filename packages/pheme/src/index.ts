@@ -135,7 +135,7 @@ export default class Pheme<Registry extends IRegistry> {
 
   constructor(registry: Registry, storageMap: StorageMap = {}) {
     if (!registry) throw new Error('Cannot initialize without a valid registry supplied.');
-    
+
     this.registry = registry;
     this.storage = new StorageProxy(storageMap);
   }

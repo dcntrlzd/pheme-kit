@@ -74,7 +74,13 @@ export default class PhemeStorageIPFS implements IStorage {
   }
 
   async readData(address: string) {
-    const { data } = await axios.get(this.publicUrlFor(address), { responseType: 'arraybuffer' });
+    // https://github.com/axios/axios/issues/907
+    // https://github.com/axios/axios/issues/1516
+    const { data } = await axios.get(this.publicUrlFor(address), {
+      responseType: 'text',
+      transformResponse: undefined
+    });
+
     return Buffer.from(data);
   }
 
