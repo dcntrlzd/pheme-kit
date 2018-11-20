@@ -23,6 +23,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap --hoist",
-    "test": "jest && lerna run test --parallel"
+    "test": "jest && lerna run test --parallel",
+    "ci:test": "jest && lerna run test"
   }
 }
