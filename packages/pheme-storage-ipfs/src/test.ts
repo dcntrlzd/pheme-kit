@@ -40,7 +40,7 @@ describe('PhemeStorageIPFS', () => {
 
   it('should be able to read and write data', async () => {
     const data = 'HELLO WORLD';
-    const buffer = new Buffer(data);
+    const buffer = Buffer.from(data);
 
     const address = await instance.writeData(buffer);
     expect(address).toBeTruthy();

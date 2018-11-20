@@ -94,6 +94,6 @@ export default class PhemeStorageIPFS implements IStorage {
   }
 
   async writeObject(object: any): Promise<string> {
-    return this.writeData(new Buffer(this.serialize(object)));
+    return this.writeData(Buffer.from(this.serialize(object)));
   }
 }
