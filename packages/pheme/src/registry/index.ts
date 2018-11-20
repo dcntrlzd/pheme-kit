@@ -1,12 +1,10 @@
 import * as ethers from 'ethers';
 import { modifyTask, createTask, IRegistry, ITask } from '../index';
 
-// TODO: consider https://github.com/ethereum-ts/TypeChain for generating contract typings
-
 type Contract = any;
 type ContractMethodCall = any;
 
-export default class PhemeRegistryWeb3 implements IRegistry {
+export default class PhemeRegistry implements IRegistry {
   public contract: ethers.ethers.Contract;
 
   constructor(contract: ethers.ethers.Contract) {
@@ -15,45 +13,45 @@ export default class PhemeRegistryWeb3 implements IRegistry {
 
   register(handle: string): ITask {
     return this.buildSetterTask('registerHandle', [
-      PhemeRegistryWeb3.stringToBytes(handle)
+      PhemeRegistry.stringToBytes(handle)
     ]);
   }
 
   getPointer(handle: string): ITask<string> {
     return this.buildGetterTask('getHandlePointer', [
-      PhemeRegistryWeb3.stringToBytes(handle)
+      PhemeRegistry.stringToBytes(handle)
     ]);
   }
 
   setPointer(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandlePointer', [
-      PhemeRegistryWeb3.stringToBytes(handle),
+      PhemeRegistry.stringToBytes(handle),
       value
     ]);
   }
 
   getProfile(handle: string): ITask<string> {
     return this.buildGetterTask('getHandleProfile', [
-      PhemeRegistryWeb3.stringToBytes(handle)
+      PhemeRegistry.stringToBytes(handle)
     ]);
   }
 
   setProfile(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandleProfile', [
-      PhemeRegistryWeb3.stringToBytes(handle),
+      PhemeRegistry.stringToBytes(handle),
       value
     ]);
   }
 
   getOwner(handle: string): ITask<string> {
     return this.buildGetterTask('getHandleOwner', [
-      PhemeRegistryWeb3.stringToBytes(handle)
+      PhemeRegistry.stringToBytes(handle)
     ]);
   }
 
   setOwner(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandleOwner', [
-      PhemeRegistryWeb3.stringToBytes(handle),
+      PhemeRegistry.stringToBytes(handle),
       value
     ]);
   }
@@ -63,7 +61,7 @@ export default class PhemeRegistryWeb3 implements IRegistry {
 
     return modifyTask(task, {
       execute: () => task.execute()
-        .then((handleAsBytes: string) => PhemeRegistryWeb3.bytesToString(handleAsBytes)),
+        .then((handleAsBytes: string) => PhemeRegistry.bytesToString(handleAsBytes)),
     })
   }
 
@@ -76,7 +74,7 @@ export default class PhemeRegistryWeb3 implements IRegistry {
 
     return modifyTask(task, {
       execute: () => task.execute()
-        .then((handleAsBytes: string) => PhemeRegistryWeb3.bytesToString(handleAsBytes)),
+        .then((handleAsBytes: string) => PhemeRegistry.bytesToString(handleAsBytes)),
     })
   }
 
@@ -115,7 +113,7 @@ export default class PhemeRegistryWeb3 implements IRegistry {
 
     return createTask({
       estimate: (context) => Promise.all([getGasPrice(), estimateGas()])
-        .then(([gasPrice, gasCost]: [number, number]) => PhemeRegistryWeb3.weiToEther(gasPrice * gasCost)),
+        .then(([gasPrice, gasCost]: [number, number]) => PhemeRegistry.weiToEther(gasPrice * gasCost)),
       execute: (context) => this.contract.functions[methodName](...args, options)
         .then(tx => {
            context.txHash = tx.hash;

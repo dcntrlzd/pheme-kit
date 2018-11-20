@@ -1,5 +1,5 @@
 import Pheme from '@dcntrlzd/pheme/src';
-import PhemeRegistryWeb3 from '@dcntrlzd/pheme/src/registry';
+import PhemeRegistry from '@dcntrlzd/pheme/src/registry';
 import PhemeStorageIpfs from '@dcntrlzd/pheme-storage-ipfs/src';
 
 import assert = require('assert');
@@ -22,7 +22,7 @@ contract("E2E Test", (accounts) => {
   let registry: any;
 
   let owner: string;
-  let pheme: Pheme<PhemeRegistryWeb3>;
+  let pheme: Pheme<PhemeRegistry>;
   let ipfsServer: any;
   let provider: ethers.providers.Web3Provider;
 
@@ -33,7 +33,7 @@ contract("E2E Test", (accounts) => {
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
     const contract = new ethers.Contract(registry.contract.address, registry.contract.abi, provider.getSigner());
 
-    const phemeRegistry = new PhemeRegistryWeb3(contract);
+    const phemeRegistry = new PhemeRegistry(contract);
 
     ipfsServer = await new Promise((resolve, reject) => {
       IPFSFactory.create().spawn((err, ipfsd) => {
@@ -51,7 +51,7 @@ contract("E2E Test", (accounts) => {
     });
   });
 
-  it('zz', async () => {
+  it('should be able to create, read and modify feeds.', async () => {
     const registerTask = pheme.registerHandle(HANDLE);
     await registerTask.execute();
     assert(registerTask.context.txHash);
