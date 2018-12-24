@@ -39,7 +39,7 @@ contract Registry is Ownable {
     return getHandleByOwner(owner) != "";
   }
 
-  function getHandleByOwner(address owner) 
+  function getHandleByOwner(address owner)
     public
     view
     returns(bytes32 handle)

@@ -16,7 +16,6 @@ const assertRejection = promise => promise.then(() => { throw new Error('Should 
 contract("Registry", (accounts) => {
   let storage;
   let registry;
-  let withEvent;
   let owner;
   let otherUser;
 
