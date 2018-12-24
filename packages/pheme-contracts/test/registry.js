@@ -7,7 +7,8 @@ const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';
 
 const assertTxEvent = (tx, event, args) => {
   const log = tx.logs.find(log => log.event === event);
-  assert.deepStrictEqual(log.args, args);
+  const argsToCompare = Object.keys(args).reduce((acc, key) => ({ ...acc, [key]: log.args[key] }), {});
+  assert.deepStrictEqual(args, argsToCompare);
 }
 
 const assertRejection = promise => promise.then(() => { throw new Error('Should not resolve'); }, () => assert.ok(true));

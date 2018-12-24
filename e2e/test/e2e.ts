@@ -31,7 +31,7 @@ contract("E2E Test", (accounts) => {
     registry = await Registry.deployed();
 
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
-    const contract = new ethers.Contract(registry.contract.address, registry.contract.abi, provider.getSigner());
+    const contract = new ethers.Contract(registry.address, registry.abi, provider.getSigner());
 
     const phemeRegistry = new PhemeRegistry(contract);
 
