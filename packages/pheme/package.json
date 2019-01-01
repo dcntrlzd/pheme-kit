@@ -3,17 +3,27 @@
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
-  "homepage": "",
+  "homepage": "https://github.com/dcntrlzd/pheme-protocol",
   "license": "MIT",
-  "main": "lib/pheme.js",
+  "main": "./lib/index.js",
   "directories": {
     "lib": "lib"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
+  },
   "files": [
-    "lib"
+    "lib/index.*",
+    "lib/registry/index.*"
   ],
+  "scripts": {
+    "prepack": "tsc",
+    "postpack": "rm -rf ./lib"
+  },
   "publishConfig": {
-    "registry": "https://registry.yarnpkg.com"
+    "registry": "https://registry.yarnpkg.com",
+    "access": "public"
   },
   "dependencies": {
     "@dcntrlzd/pheme-contracts": "^0.0.0",
