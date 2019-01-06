@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types" : ["node", "bn.js", "uuid", "jest"],
     "pretty": true,
     "outDir": "./build/",
     "sourceMap": true,

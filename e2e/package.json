@@ -1,14 +1,15 @@
 {
   "name": "e2e",
+  "version": "0.0.0",
   "scripts": {
     "test": "truffle test"
   },
   "dependencies": {
     "@dcntrlzd/pheme": "^0.0.0",
     "@dcntrlzd/pheme-contracts": "^0.0.0",
-    "truffle": "^4.1.14"
+    "@dcntrlzd/pheme-storage-ipfs": "^0.0.0"
   },
   "devDependencies": {
-    "@dcntrlzd/pheme-storage-ipfs": "^0.0.0"
+    "@types/mocha": "^5.2.5"
   }
 }

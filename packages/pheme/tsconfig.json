@@ -3,10 +3,7 @@
   "compilerOptions": {
     "outDir": "./lib"
   },
-  "exclude": [
-    "../../node_modules/@types/mocha"
-  ],
   "include": [
-    "./src"
+   "./src"
   ]
 }
