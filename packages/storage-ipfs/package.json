@@ -1,0 +1,32 @@
+{
+  "name": "@pheme-kit/storage-ipfs",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "Baris Gumustas <barisg@dcntrlzd.io>",
+  "homepage": "https://github.com/dcntrlzd/pheme-protocol",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "prepack": "tsc",
+    "postpack": "rm -rf ./lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
+  },
+  "files": [
+    "lib/index.*"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com",
+    "access": "public"
+  },
+  "dependencies": {
+    "@pheme-kit/core": "^0.0.0",
+    "axios": "^0.18.0",
+    "ipfs-api": "^26.1.2"
+  }
+}

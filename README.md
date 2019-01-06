@@ -1,6 +1,6 @@
-# Pheme Protocol
+# Pheme Kit
 
-Pheme Protocol allows decentralized publishing of content feeds using IPFS and Ethereum. This repository contains the Ethereum smart contracts and the javascript reference implementation.
+Pheme Kit allows decentralized publishing of content feeds using IPFS and Ethereum. This repository contains the Ethereum smart contracts and javascript libraries which allows you to build and deploy your decentralized content feeds.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ Pheme Protocol allows decentralized publishing of content feeds using IPFS and E
 
 ## Overview
 
-Pheme Protocol uses Ethereum as a registry layer and IPFS (for now) as the storage layer to provide decentralized content feeds grouped under handles. Therefore enabling censorship resistant content feeds.
+Pheme Kit uses Ethereum as a registry layer and IPFS (for now) as the storage layer to provide decentralized content feed or feeds. Therefore enabling censorship resistant content distribution.
 
 The storage layer is abstracted so i can support multiple storage layers even inside a single feed although IPFS is the sole storage layer implementation as of today.
 
@@ -25,12 +25,12 @@ Pheme feeds are consisted of small json objects living in the storage layer cont
 
 ## Getting Started
 
-First of all you'll need to pick a registry to start working on a feed. You can start by using the public registry (it lives in `@dcntrlzd/pheme-contracts/contracts/registry.sol`). And then you can start using Pheme.
+First of all you'll need to pick a registry to start working on a feed. You can start by using the public registry (it lives in `@pheme-kit/ethereum/registry.sol`). And then you can start using Pheme.
 
 ```js
-import Pheme from '@dcntrlzd/pheme-protocol';
-import PhemeRegistry from '@dcntrlzd/pheme/src/registry';
-import PhemeStorageIpfs from '@dcntrlzd/pheme-storage-ipfs/src';
+import Pheme from '@pheme-kit/core';
+import PhemeRegistry from '@pheme-kit/src/registry';
+import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 
 // You'll need an ethers.js contract to intialize the registry (more at https://docs.ethers.io/ethers.js/html/)
 const registry = new PhemeRegistry(contract);
@@ -79,6 +79,7 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
   * Getters should not work with transactions
   * Only setters should work with transactions
   * Consistent naming of functions
+  * Use hash only IPFS calls for estimation
 * API Documentation
 * Add a getter for the owner of a handle (getHandleByOwner)
 * Add a handle iterator (by using getHandleCount and getHandleAt)
@@ -87,7 +88,7 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 * Build Endorsements as a reference extension
 * Improving tests
 * Adding one more storage engine
-* Linking for IPFS storage
+* Migrate from ipfs-api to ipfs-http-client
 * ENS resolved
 * ERC-721 implementation for handles
 * Custom registration methods

@@ -1,10 +1,7 @@
 require('ts-node').register();
 
+const base = require('../packages/ethereum/truffle');
+
 module.exports = {
-  test_file_extension_regexp: /.*\.[tj]s$/,
-  compilers: {
-    solc: {
-      version: '0.4.25',
-    },
-  }
+  ...base,
 };

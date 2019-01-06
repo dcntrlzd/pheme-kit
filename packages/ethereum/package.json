@@ -1,0 +1,25 @@
+{
+  "name": "@pheme-kit/ethereum",
+  "version": "0.0.0",
+  "description": "> TODO: description",
+  "author": "Baris Gumustas <barisg@dcntrlzd.io>",
+  "homepage": "https://github.com/dcntrlzd/pheme-protocol",
+  "license": "MIT",
+  "directories": {
+    "contracts": "contracts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
+  },
+  "files": [
+    "contracts/**/*"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com",
+    "access": "public"
+  },
+  "scripts": {
+    "test": "truffle test"
+  }
+}

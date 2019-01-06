@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
+    "types" : ["node", "bn.js", "uuid", "jest"],
     "pretty": true,
     "outDir": "./build/",
     "sourceMap": true,
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "declaration": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "target": "es2017",
@@ -17,5 +20,8 @@
   },
   "include": [
     "./packages/**/*",
+  ],
+  "exclude": [
+    "**/*.test.ts"
   ]
 }
