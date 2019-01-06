@@ -5,9 +5,9 @@
     "test": "truffle test"
   },
   "dependencies": {
-    "@dcntrlzd/pheme": "^0.0.0",
-    "@dcntrlzd/pheme-contracts": "^0.0.0",
-    "@dcntrlzd/pheme-storage-ipfs": "^0.0.0"
+    "@pheme-kit/core": "^0.0.0",
+    "@pheme-kit/ethereum": "^0.0.0",
+    "@pheme-kit/storage-ipfs": "^0.0.0"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.5"

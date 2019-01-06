@@ -1,6 +1,6 @@
-import Pheme from '@dcntrlzd/pheme/src';
-import PhemeRegistry from '@dcntrlzd/pheme/src/registry';
-import PhemeStorageIpfs from '@dcntrlzd/pheme-storage-ipfs/src';
+import Pheme from '@pheme-kit/core/src';
+import PhemeRegistry from '@pheme-kit/core/src/registry';
+import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 
 import assert = require('assert');
 import * as ethers from 'ethers';

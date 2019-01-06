@@ -1,32 +1,25 @@
 {
-  "name": "@dcntrlzd/pheme-storage-ipfs",
+  "name": "@pheme-kit/ethereum",
   "version": "0.0.0",
   "description": "> TODO: description",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
   "homepage": "https://github.com/dcntrlzd/pheme-protocol",
   "license": "MIT",
-  "main": "./lib/index.js",
   "directories": {
-    "lib": "lib"
-  },
-  "scripts": {
-    "prepack": "tsc",
-    "postpack": "rm -rf ./lib"
+    "contracts": "contracts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
   },
   "files": [
-    "lib/index.*"
+    "contracts/**/*"
   ],
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com",
     "access": "public"
   },
-  "dependencies": {
-    "@dcntrlzd/pheme": "^0.0.0",
-    "axios": "^0.18.0",
-    "ipfs-api": "^26.1.2"
+  "scripts": {
+    "test": "truffle test"
   }
 }

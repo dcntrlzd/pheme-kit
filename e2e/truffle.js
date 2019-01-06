@@ -1,6 +1,6 @@
 require('ts-node').register();
 
-const base = require('../packages/pheme-contracts/truffle');
+const base = require('../packages/ethereum/truffle');
 
 module.exports = {
   ...base,
