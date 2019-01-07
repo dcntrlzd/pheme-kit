@@ -1,6 +1,6 @@
 import { IStorage } from '@pheme-kit/core/src';
 import * as URL from 'url';
-import IPFS from 'ipfs-api';
+import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 
 export interface IDAGNode {
@@ -35,10 +35,8 @@ export interface IIPFSClient {
     ls: (hash?: string, options?: any) => Promise<{ hash: string, type: string }[]>,
     rm: (hash, options?: any) => Promise<void>,
   },
-  files: {
-    add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>,
-    get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>,
-  }
+  add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>,
+  get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>,
 };
 
 export const hashFromUrl = (url: string) => (url.match(/([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/) || [])[2] || '';
@@ -85,7 +83,7 @@ export default class PhemeStorageIPFS implements IStorage {
   }
 
   async writeData(data: Buffer) {
-    const [{ hash }] = await this.ipfs.files.add(data);
+    const [{ hash }] = await this.ipfs.add(data);
     return `ipfs://${hash}`;
   }
 

@@ -69,18 +69,19 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 * Runs with an Ethereum smart contract as a registry and IPFS as the storage layer.
 
 ## Next Steps
-* Rename handle to feed
+* API Documentation
+* Conceptual Documentation
 * Simplification of the API
   * Constructor should receive the contract not the registry
     * Registry should be created inside the constructor
   * Rename tasks to transactions
+  * Rename handle to feed
   * Modify transactions to be similar to ethers.Transaction
   * Splitting the setters and getters
   * Getters should not work with transactions
   * Only setters should work with transactions
   * Consistent naming of functions
   * Use hash only IPFS calls for estimation
-* API Documentation
 * Add a getter for the owner of a handle (getHandleByOwner)
 * Add a handle iterator (by using getHandleCount and getHandleAt)
 * More verbose chain output
@@ -88,7 +89,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 * Build Endorsements as a reference extension
 * Improving tests
 * Adding one more storage engine
-* Migrate from ipfs-api to ipfs-http-client
 * ENS resolved
 * ERC-721 implementation for handles
 * Custom registration methods

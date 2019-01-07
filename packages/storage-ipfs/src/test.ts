@@ -1,5 +1,5 @@
 import PhemeStorageIPFS from './index';
-import IPFS from 'ipfs-api';
+import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 import uuid from 'uuid/v4';
 
@@ -7,7 +7,7 @@ const IPFS_RPC = 'http://localhost:5001';
 const IPFS_GATEWAY = 'http://localhost';
 
 jest.mock('axios');
-jest.mock('ipfs-api', () => jest.fn(() => ({ files: { add: jest.fn() } })));
+jest.mock('ipfs-http-client', () => jest.fn(() => ({ add: jest.fn() })));
 
 describe('PhemeStorageIPFS', () => {
   let instance: PhemeStorageIPFS;
@@ -22,7 +22,7 @@ describe('PhemeStorageIPFS', () => {
       return Promise.resolve({ data: repo[ipfsAddress] });
     });
 
-    (instance.ipfs.files.add as any).mockImplementation((object: Buffer) => {
+    (instance.ipfs.add as any).mockImplementation((object: Buffer) => {
       const path = uuid().replace(/-/ig, '');
       repo[path] = object;
       return Promise.resolve([{
