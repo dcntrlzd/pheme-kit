@@ -8,20 +8,20 @@ const Contract: any = jest.fn(() => {
       getGasPrice: jest.fn(() => Promise.resolve(new BigNumber(5))),
     },
     functions: {
-      getHandlePointer: jest.fn(handle => Promise.resolve(storage[handle].pointer)),
-      getHandleProfile: jest.fn(handle => Promise.resolve(storage[handle].profile)),
-      getHandleOwner: jest.fn(handle => Promise.resolve(storage[handle].owner)),
-      getHandleAt: jest.fn(index => {
+      getHandlePointer: jest.fn((handle) => Promise.resolve(storage[handle].pointer)),
+      getHandleProfile: jest.fn((handle) => Promise.resolve(storage[handle].profile)),
+      getHandleOwner: jest.fn((handle) => Promise.resolve(storage[handle].owner)),
+      getHandleAt: jest.fn((index) => {
         const handle = Object.keys(storage)[index] || '';
         return Promise.resolve(handle);
       }),
-      getHandleCount: jest.fn(handle => {
+      getHandleCount: jest.fn((handle) => {
         const count = Object.keys(storage).length;
         return Promise.resolve(new BigNumber(count));
       }),
-      getHandleByOwner: jest.fn(owner => {
-        const handle = Object.keys(storage).find(handle => storage[handle].owner === owner) || '';
-        return Promise.resolve(handle)
+      getHandleByOwner: jest.fn((owner) => {
+        const handle = Object.keys(storage).find((handle) => storage[handle].owner === owner) || '';
+        return Promise.resolve(handle);
       }),
       registerHandle: jest.fn((handle) => {
         storage[handle] = { owner: 'owner' };
@@ -51,7 +51,7 @@ const Contract: any = jest.fn(() => {
       setHandlePointer: jest.fn(() => Promise.resolve(new BigNumber(10))),
       setHandleProfile: jest.fn(() => Promise.resolve(new BigNumber(10))),
       setHandleOwner: jest.fn(() => Promise.resolve(new BigNumber(10))),
-    }
+    },
   };
 });
 

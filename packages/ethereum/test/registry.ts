@@ -11,14 +11,23 @@ const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
 const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';
 
 const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find(log => log.event === event);
-  const argsToCompare = Object.keys(args).reduce((acc, key) => ({ ...acc, [key]: log.args[key] }), {});
+  const log = tx.logs.find((log) => log.event === event);
+  const argsToCompare = Object.keys(args).reduce(
+    (acc, key) => ({ ...acc, [key]: log.args[key] }),
+    {}
+  );
   assert.deepStrictEqual(args, argsToCompare);
-}
+};
 
-const assertRejection = promise => promise.then(() => { throw new Error('Should not resolve'); }, () => assert.ok(true));
+const assertRejection = (promise) =>
+  promise.then(
+    () => {
+      throw new Error('Should not resolve');
+    },
+    () => assert.ok(true)
+  );
 
-contract("Registry", (accounts) => {
+contract('Registry', (accounts) => {
   let storage;
   let registry;
   let withEvent;
@@ -29,7 +38,7 @@ contract("Registry", (accounts) => {
   const paddedHandle = handle.padEnd(66, '0');
 
   before(async () => {
-    ([owner, otherUser] = accounts);
+    [owner, otherUser] = accounts;
     storage = await StorageContract.deployed();
     registry = await RegistryContract.deployed();
   });
@@ -41,22 +50,26 @@ contract("Registry", (accounts) => {
     assert.strictEqual(ownerInRegistry, owner);
   });
 
-  it ('can not insert a record a node which is already registered', async () => {
+  it('can not insert a record a node which is already registered', async () => {
     await assertRejection(registry.registerHandle(handle, { from: otherUser }));
   });
 
   it('can update an owned record', async () => {
-    const tx = await registry.setHandlePointer(handle, BASE_MULTIHASH, { from: owner });
-    assertTxEvent(tx, 'RecordUpdated', { handle: paddedHandle, key: 'pointer' });
+    const tx = await registry.setHandlePointer(handle, BASE_MULTIHASH, {
+      from: owner,
+    });
+    assertTxEvent(tx, 'RecordUpdated', {
+      handle: paddedHandle,
+      key: 'pointer',
+    });
 
     const pointer = await registry.getHandlePointer.call(handle);
     assert.strictEqual(pointer, BASE_MULTIHASH);
   });
 
   it('can not update a non-owned record', async () => {
-    await assertRejection(registry.setHandlePointer(handle, NEW_MULTIHASH,{ from: otherUser }));
+    await assertRejection(registry.setHandlePointer(handle, NEW_MULTIHASH, { from: otherUser }));
     const pointer = await registry.getHandlePointer.call(handle);
     assert.strictEqual(pointer, BASE_MULTIHASH);
   });
 });
-

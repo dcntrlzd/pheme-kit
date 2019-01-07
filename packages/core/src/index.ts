@@ -1,10 +1,10 @@
 import { v4 as uuid } from 'uuid';
 
 export interface ITask<T = void> {
-  context: any,
-  execute: (parentContext?: any) => Promise<T>,
-  estimate: (parentContext?: any) => Promise<number>,
-};
+  context: any;
+  execute: (parentContext?: any) => Promise<T>;
+  estimate: (parentContext?: any) => Promise<number>;
+}
 
 export interface IStorage {
   publicUrlFor: (address: string) => string;
@@ -19,7 +19,7 @@ export interface IStorage {
   writeObject: (block: IBlock) => Promise<string>;
 
   addressForEstimation: () => string;
-};
+}
 
 export interface IRegistry {
   register: (handle: string) => ITask<void>;
@@ -34,24 +34,27 @@ export interface IRegistry {
   setOwner: (handle: string, value: any) => ITask<void>;
 
   getHandleByOwner: (owner: string) => ITask<string>;
-};
+}
 
 export interface IBlock {
-  uuid: string,
+  uuid: string;
   address: string;
   meta: any;
   timestamp: number;
   previous: string;
-};
+}
 
 type StorageMap = { [protocol: string]: IStorage };
-type HandleState =  [string, IBlock[]];
+type HandleState = [string, IBlock[]];
 type HandleModification = [string, IBlock];
 
-export function createTask<Y>(methods: {
-  execute: (context: any) => Promise<Y>,
-  estimate: (context: any) => Promise<number>,
-}, context = {}): ITask<Y> {
+export function createTask<Y>(
+  methods: {
+    execute: (context: any) => Promise<Y>;
+    estimate: (context: any) => Promise<number>;
+  },
+  context = {}
+): ITask<Y> {
   return {
     context,
     execute: (parentContext: any = {}) => {
@@ -65,16 +68,15 @@ export function createTask<Y>(methods: {
         Object.assign(parentContext, context);
         return result;
       });
-    }
-  }
+    },
+  };
 }
 
 export function modifyTask<Z, Y>(task: Z, modifications: Y): Z & Y {
   return new Proxy(task as any, {
-    get: (context, prop) => modifications[prop] || context[prop]
+    get: (context, prop) => modifications[prop] || context[prop],
   }) as Z & Y;
 }
-
 
 export class StorageProxy implements IStorage {
   private storageMap: StorageMap = {};
@@ -86,11 +88,13 @@ export class StorageProxy implements IStorage {
 
   private getAddressProtocol(address: string): string {
     const url = new URL(address);
-    return url.protocol.replace(/\:/,'');
+    return url.protocol.replace(/\:/, '');
   }
 
   getStorage(address?: string): IStorage {
-    const protocol: string = address ? this.getAddressProtocol(address) : Object.keys(this.storageMap)[0];
+    const protocol: string = address
+      ? this.getAddressProtocol(address)
+      : Object.keys(this.storageMap)[0];
     const storage = this.storageMap[protocol];
     if (!storage) throw new Error(`Unknown storage protocol: ${protocol}`);
     return storage;
@@ -127,7 +131,7 @@ export class StorageProxy implements IStorage {
   addressForEstimation() {
     return this.getStorage().addressForEstimation();
   }
-};
+}
 
 export default class Pheme<Registry extends IRegistry> {
   readonly registry: Registry;
@@ -147,27 +151,30 @@ export default class Pheme<Registry extends IRegistry> {
   getHandleProfile(handle: string): ITask<any> {
     const task = this.registry.getProfile(handle);
     return modifyTask(task, {
-      execute: () => task.execute().then((profileAddress: string) => {
-        if (!profileAddress) return;
-        return this.storage.readObject(profileAddress);
-      })
+      execute: () =>
+        task.execute().then((profileAddress: string) => {
+          if (!profileAddress) return;
+          return this.storage.readObject(profileAddress);
+        }),
     });
   }
 
   updateHandleProfile(handle: string, profile: any): ITask<string> {
     return createTask({
-      estimate: () => this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate(),
+      estimate: () =>
+        this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const profileAddress = await this.storage.writeObject(profile);
         await this.registry.setProfile(handle, profileAddress).execute(context);
         return profileAddress;
-      }
-    })
+      },
+    });
   }
 
   pushToHandle(handle: string, data: Buffer, meta: any = {}): ITask<HandleModification> {
     return createTask({
-      estimate: () => this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
+      estimate: () =>
+        this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const previous = await this.registry.getPointer(handle).execute();
 
@@ -180,7 +187,9 @@ export default class Pheme<Registry extends IRegistry> {
         } as IBlock;
 
         const resolvedNewBlock = await newBlock;
-        const newBlockAddress = await this.storage.getStorage(resolvedNewBlock.previous).writeObject(resolvedNewBlock);
+        const newBlockAddress = await this.storage
+          .getStorage(resolvedNewBlock.previous)
+          .writeObject(resolvedNewBlock);
 
         await this.registry.setPointer(handle, newBlockAddress).execute(context);
         return [newBlockAddress, newBlock] as [string, IBlock];
@@ -192,9 +201,10 @@ export default class Pheme<Registry extends IRegistry> {
     handle: string,
     uuid: string,
     modify: (block: IBlock) => Promise<HandleModification>
-  ) : ITask<HandleState> {
+  ): ITask<HandleState> {
     return createTask({
-      estimate: () => this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
+      estimate: () =>
+        this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const blocks: IBlock[] = [];
         const rewrite: IBlock[] = [];
@@ -233,7 +243,7 @@ export default class Pheme<Registry extends IRegistry> {
 
         await this.registry.setPointer(handle, pointer).execute(context);
         return [pointer, blocks] as HandleState;
-      }
+      },
     });
   }
 
@@ -265,20 +275,23 @@ export default class Pheme<Registry extends IRegistry> {
     const task = this.registry.getPointer(handle);
 
     return modifyTask(task, {
-      execute: () => task.execute().then(async (storageAddress: string): Promise<HandleState> => {
-        const chain: IBlock[] = [];
-        if (!storageAddress) return [undefined, []];
+      execute: () =>
+        task.execute().then(
+          async (storageAddress: string): Promise<HandleState> => {
+            const chain: IBlock[] = [];
+            if (!storageAddress) return [undefined, []];
 
-        let cursor = storageAddress;
+            let cursor = storageAddress;
 
-        do {
-          const block: IBlock = await this.storage.readObject(cursor);
-          chain.push(block);
-          cursor = block.previous;
-        } while (cursor);
+            do {
+              const block: IBlock = await this.storage.readObject(cursor);
+              chain.push(block);
+              cursor = block.previous;
+            } while (cursor);
 
-        return [storageAddress, chain];
-      })
+            return [storageAddress, chain];
+          }
+        ),
     });
   }
 }

@@ -27,11 +27,15 @@ export default class PhemeStorageTest implements IStorage {
     return Promise.resolve(`test://${address}`);
   });
 
-  readObject = jest.fn(async (address: string): Promise<any> => {
-    return this.deserialize(await this.readData(address));
-  });
+  readObject = jest.fn(
+    async (address: string): Promise<any> => {
+      return this.deserialize(await this.readData(address));
+    }
+  );
 
-  writeObject = jest.fn((object: any): Promise<string> => {
-    return this.writeData(this.serialize(object));
-  });
+  writeObject = jest.fn(
+    (object: any): Promise<string> => {
+      return this.writeData(this.serialize(object));
+    }
+  );
 }

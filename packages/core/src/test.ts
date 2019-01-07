@@ -6,13 +6,16 @@ import TestStorage from './test/storage';
 describe('modifyTask', () => {
   it('should override the task', async () => {
     const taskBuilder = (): ITask => {
-      return createTask({
-        estimate: async () => 0,
-        execute: (context) => {
-          context.status = 'DONE';
-          return Promise.resolve();
-        }
-      }, { status: 'READY' })
+      return createTask(
+        {
+          estimate: async () => 0,
+          execute: (context) => {
+            context.status = 'DONE';
+            return Promise.resolve();
+          },
+        },
+        { status: 'READY' }
+      );
     };
 
     const baseTask = taskBuilder();
@@ -22,7 +25,7 @@ describe('modifyTask', () => {
 
     const taskToBeModified = taskBuilder();
     const modifiedTask = modifyTask(taskToBeModified, {
-      execute: () => taskToBeModified.execute().then(() => 'HELLO WORLD')
+      execute: () => taskToBeModified.execute().then(() => 'HELLO WORLD'),
     });
 
     expect(modifiedTask.context.status).toBe('READY');
@@ -36,7 +39,7 @@ describe('Core', () => {
 
   beforeEach(() => {
     core = new Pheme(new TestRegistry(), {
-      test: new TestStorage()
+      test: new TestStorage(),
     });
   });
 
@@ -46,7 +49,9 @@ describe('Core', () => {
     });
 
     it('should not initialize if no constructor is passed', () => {
-      expect(() => new Pheme(undefined)).toThrowError('Cannot initialize without a valid registry supplied.');
+      expect(() => new Pheme(undefined)).toThrowError(
+        'Cannot initialize without a valid registry supplied.'
+      );
     });
   });
 
@@ -67,7 +72,9 @@ describe('Core', () => {
 
     it('should get the handle profile', async () => {
       await core.updateHandleProfile('test', { bio: 'Hello World' }).execute();
-      expect(await core.getHandleProfile('test').execute()).toEqual({ bio: 'Hello World' });
+      expect(await core.getHandleProfile('test').execute()).toEqual({
+        bio: 'Hello World',
+      });
     });
   });
 
@@ -95,7 +102,7 @@ describe('Core', () => {
       await core.pushToHandle('test', Buffer.from('CONTENT')).execute();
       const [address, chain] = await core.loadHandle('test').execute();
       expect(chain[0].meta).toEqual({});
-    })
+    });
   });
 
   describe('replaceFromHandle', () => {
@@ -114,13 +121,13 @@ describe('Core', () => {
       const oldContent = await core.storage.readData(blockToReplace.address);
       expect(oldContent.toString()).toBe('CONTENT 2');
 
-
       const newContent = 'CONTENT 2 (MODIFIED)';
 
       const [newAddress, newChain] = await core
         .replaceFromHandle('test', blockToReplace.uuid, Buffer.from(newContent), {
-          title: newContent
-        }).execute();
+          title: newContent,
+        })
+        .execute();
 
       expect(newChain).toHaveLength(3);
       expect(newAddress).not.toBe(oldAddress);
@@ -135,7 +142,11 @@ describe('Core', () => {
       beforeEach(async () => {
         await core.registerHandle('test').execute();
 
-        await core.pushToHandle('test', Buffer.from('CONTENT 1'), { title: 'CONTENT 1' }).execute();
+        await core
+          .pushToHandle('test', Buffer.from('CONTENT 1'), {
+            title: 'CONTENT 1',
+          })
+          .execute();
       });
 
       it('should remove the content with the supplied uuid for the supplied handle', async () => {
@@ -144,7 +155,7 @@ describe('Core', () => {
 
         const [address, chain] = await core.loadHandle('test').execute();
         expect(chain.length).toBe(0);
-        expect(chain.map(block => block.meta.title)).toEqual([]);
+        expect(chain.map((block) => block.meta.title)).toEqual([]);
         expect(address).toBeUndefined();
       });
     });
@@ -153,9 +164,21 @@ describe('Core', () => {
       beforeEach(async () => {
         await core.registerHandle('test').execute();
 
-        await core.pushToHandle('test', Buffer.from('CONTENT 1'), { title: 'CONTENT 1' }).execute();
-        await core.pushToHandle('test', Buffer.from('CONTENT 2'), { title: 'CONTENT 2' }).execute();
-        await core.pushToHandle('test', Buffer.from('CONTENT 3'), { title: 'CONTENT 3' }).execute();
+        await core
+          .pushToHandle('test', Buffer.from('CONTENT 1'), {
+            title: 'CONTENT 1',
+          })
+          .execute();
+        await core
+          .pushToHandle('test', Buffer.from('CONTENT 2'), {
+            title: 'CONTENT 2',
+          })
+          .execute();
+        await core
+          .pushToHandle('test', Buffer.from('CONTENT 3'), {
+            title: 'CONTENT 3',
+          })
+          .execute();
       });
 
       it('should remove the content with the supplied uuid for the supplied handle', async () => {
@@ -164,22 +187,27 @@ describe('Core', () => {
 
         const [address, chain] = await core.loadHandle('test').execute();
         expect(chain.length).toBe(2);
-        expect(chain.map(block => block.meta.title)).toEqual(['CONTENT 3', 'CONTENT 1']);
+        expect(chain.map((block) => block.meta.title)).toEqual(['CONTENT 3', 'CONTENT 1']);
         expect(address).not.toEqual(oldAddress);
       });
 
       it('should not remove any content when an invalid uuid is passed', async () => {
         const [oldAddress, oldChain] = await core.loadHandle('test').execute();
 
-        expect(core.removeFromHandle('test', 'XXXXXX').execute())
-          .rejects.toThrow('test handle does not need modification');
+        expect(core.removeFromHandle('test', 'XXXXXX').execute()).rejects.toThrow(
+          'test handle does not need modification'
+        );
 
         const [address, chain] = await core.loadHandle('test').execute();
         expect(chain.length).toBe(3);
-        expect(chain.map(block => block.meta.title)).toEqual(['CONTENT 3', 'CONTENT 2', 'CONTENT 1']);
+        expect(chain.map((block) => block.meta.title)).toEqual([
+          'CONTENT 3',
+          'CONTENT 2',
+          'CONTENT 1',
+        ]);
         expect(address).toEqual(oldAddress);
       });
-    })
+    });
   });
 
   describe('loadHandle', () => {
@@ -192,7 +220,11 @@ describe('Core', () => {
     });
 
     it('should load the handle for a loaded chain', async () => {
-      const handle = await core.pushToHandle('test', Buffer.from('HELLO WORLD'), { title: 'HELLO WORLD' }).execute();
+      const handle = await core
+        .pushToHandle('test', Buffer.from('HELLO WORLD'), {
+          title: 'HELLO WORLD',
+        })
+        .execute();
       const [address, blocks] = await core.loadHandle('test').execute();
       expect(address).toBe(handle[0]);
       expect(blocks).toEqual([handle[1]]);

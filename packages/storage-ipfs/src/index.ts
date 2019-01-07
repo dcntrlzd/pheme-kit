@@ -7,39 +7,44 @@ export interface IDAGNode {
   data: Buffer;
   links: any[];
   multihash: number[];
-};
+}
 
 export interface IIPFSFileReference {
-  path: string,
-  hash: string,
-  size: number,
-};
+  path: string;
+  hash: string;
+  size: number;
+}
 
 export interface IIPFSFileResponse {
-  path: string,
-  content: Buffer,
+  path: string;
+  content: Buffer;
 }
 
 export interface IIPFSClient {
   swarm: {
-    peers: (opts?: { verbose: boolean }) => Promise<{
-      addr: any /* MultiAddr */,
-      peer: string /* PeerId */,
-      muxer: string,
-      latency?: string,
-      streams?: string[]
-    }[]>,
-  },
+    peers: (
+      opts?: { verbose: boolean }
+    ) => Promise<
+      {
+        addr: any /* MultiAddr */;
+        peer: string /* PeerId */;
+        muxer: string;
+        latency?: string;
+        streams?: string[];
+      }[]
+    >;
+  };
   pin: {
-    add: (hash: string, options?: any) => Promise<void>,
-    ls: (hash?: string, options?: any) => Promise<{ hash: string, type: string }[]>,
-    rm: (hash, options?: any) => Promise<void>,
-  },
-  add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>,
-  get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>,
-};
+    add: (hash: string, options?: any) => Promise<void>;
+    ls: (hash?: string, options?: any) => Promise<{ hash: string; type: string }[]>;
+    rm: (hash, options?: any) => Promise<void>;
+  };
+  add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>;
+  get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>;
+}
 
-export const hashFromUrl = (url: string) => (url.match(/([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/) || [])[2] || '';
+export const hashFromUrl = (url: string) =>
+  (url.match(/([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/) || [])[2] || '';
 
 export default class PhemeStorageIPFS implements IStorage {
   readonly ipfs: IIPFSClient;
@@ -76,7 +81,7 @@ export default class PhemeStorageIPFS implements IStorage {
     // https://github.com/axios/axios/issues/1516
     const { data } = await axios.get(this.publicUrlFor(address), {
       responseType: 'text',
-      transformResponse: undefined
+      transformResponse: undefined,
     });
 
     return Buffer.from(data);
