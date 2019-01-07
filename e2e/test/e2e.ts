@@ -1,3 +1,6 @@
+declare var artifacts: any;
+declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
+
 import Pheme from '@pheme-kit/core/src';
 import PhemeRegistry from '@pheme-kit/core/src/registry';
 import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
@@ -5,9 +8,6 @@ import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 import assert = require('assert');
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
-
-declare var artifacts: any;
-declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
 
 const assertTxEvent = (tx, event, args) => {
   const log = tx.logs.find(log => log.event === event);

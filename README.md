@@ -16,7 +16,7 @@ Pheme Kit allows decentralized publishing of content feeds using IPFS and Ethere
 
 Pheme Kit uses Ethereum as a registry layer and IPFS (for now) as the storage layer to provide decentralized content feed or feeds. Therefore enabling censorship resistant content distribution.
 
-The storage layer is abstracted so i can support multiple storage layers even inside a single feed although IPFS is the sole storage layer implementation as of today.
+The storage layer is abstracted so it can support multiple storage layers even inside a single feed although IPFS is the sole storage layer implementation as of today.
 
 ## How It Works
 

@@ -1,5 +1,10 @@
-const Storage = artifacts.require('Storage');
-const Registry = artifacts.require('Registry');
+import assert = require('assert');
+
+declare var artifacts: any;
+declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
+
+const StorageContract = artifacts.require('Storage');
+const RegistryContract = artifacts.require('Registry');
 const utils = require('web3-utils');
 
 const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
@@ -25,8 +30,8 @@ contract("Registry", (accounts) => {
 
   before(async () => {
     ([owner, otherUser] = accounts);
-    storage = await Storage.deployed();
-    registry = await Registry.deployed();
+    storage = await StorageContract.deployed();
+    registry = await RegistryContract.deployed();
   });
 
   it('can insert a record', async () => {

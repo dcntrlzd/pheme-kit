@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "types" : ["node", "bn.js", "uuid", "jest"],
     "pretty": true,
     "outDir": "./build/",
     "sourceMap": true,
@@ -12,16 +11,10 @@
     "module": "commonjs",
     "target": "es2017",
     "jsx": "react",
-    "lib": ["es6","es7","dom"],
+    "lib": ["es6","es7", "dom"],
     "baseUrl": ".",
     "paths": {
       "*": [ "packages/*" ]
     }
-  },
-  "include": [
-    "./packages/**/*",
-  ],
-  "exclude": [
-    "**/*.test.ts"
-  ]
+  }
 }
