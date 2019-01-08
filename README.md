@@ -31,14 +31,14 @@ First of all you'll need to pick a registry to start working on a feed. You can 
 
 ```js
 import Pheme from '@pheme-kit/core';
-import PhemeRegistry from '@pheme-kit/src/registry';
-import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
+import PhemeRegistry from '@pheme-kit/lib/registry';
+import PhemeStorageIpfs from '@pheme-kit/storage-ipfs';
 
 // You'll need an ethers.js contract to intialize the registry (more at https://docs.ethers.io/ethers.js/html/)
 const registry = new PhemeRegistry(contract);
 
 const pheme = new Pheme(registry, {
-  ipfs: new PhemeStorageIpfs(IPFS_RPC_URL, IPFS_GATEWAY_URL)
+  ipfs: new PhemeStorageIpfs(IPFS_RPC_URL, IPFS_GATEWAY_URL),
 });
 ```
 
@@ -58,19 +58,20 @@ After that you'll be able to work on it and then you can use `yarn test` to run 
 
 1. Fork the repo on GitHub
 2. Clone the project to your own machine
-3. Commit changes to your own branch
-4. Push your work back up to your fork (Be sure you have tests and all checks & tests are green).
-5. Submit a Pull request so that we can review your changes
+3. Apply your changes
+4. Run `yarn lint:fix` and `yarn format:fix`
+5. Commit changes to your own branch
+6. Push your work back up to your fork (Be sure you have tests and all checks & tests are green).
+7. Submit a Pull request so that we can review your changes
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
-
 
 ## Current State
 * Allows creation and management of content chains under handles.
 * Handles can have profiles.
 * Runs with an Ethereum smart contract as a registry and IPFS as the storage layer.
 
-## Next Steps
+## TODO
 * API Documentation
 * Conceptual Documentation
 * Simplification of the API
@@ -91,8 +92,8 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 * Build Endorsements as a reference extension
 * Improving tests
 * Adding one more storage engine
-* ENS resolved
+* ENS resolver for registry
 * ERC-721 implementation for handles
-* Custom registration methods
- * controlled by a single account
- * ENS
+* More Registry implementations
+  * Multi Owner (multiple owners can write to whatever handle they want).
+  * Multi Authority (multiple owners can assign whichever handle they want to anyone).
