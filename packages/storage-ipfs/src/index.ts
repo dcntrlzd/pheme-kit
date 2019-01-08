@@ -20,23 +20,21 @@ export interface IIPFSFileResponse {
   content: Buffer;
 }
 
+interface IPFSPeerInfo {
+  addr: any /* MultiAddr */;
+  peer: string /* PeerId */;
+  muxer: string;
+  latency?: string;
+  streams?: string[];
+}
+
 export interface IIPFSClient {
   swarm: {
-    peers: (
-      opts?: { verbose: boolean }
-    ) => Promise<
-      {
-        addr: any /* MultiAddr */;
-        peer: string /* PeerId */;
-        muxer: string;
-        latency?: string;
-        streams?: string[];
-      }[]
-    >;
+    peers: (opts?: { verbose: boolean }) => Promise<IPFSPeerInfo[]>;
   };
   pin: {
     add: (hash: string, options?: any) => Promise<void>;
-    ls: (hash?: string, options?: any) => Promise<{ hash: string; type: string }[]>;
+    ls: (hash?: string, options?: any) => Promise<Array<{ hash: string; type: string }>>;
     rm: (hash, options?: any) => Promise<void>;
   };
   add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>;
@@ -47,8 +45,8 @@ export const hashFromUrl = (url: string) =>
   (url.match(/([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/) || [])[2] || '';
 
 export default class PhemeStorageIPFS implements IStorage {
-  readonly ipfs: IIPFSClient;
-  readonly gatewayUrl: string;
+  public readonly ipfs: IIPFSClient;
+  public readonly gatewayUrl: string;
 
   constructor(rpcUrl: string, gatewayUrl: string) {
     const uri = URL.parse(rpcUrl);
@@ -76,7 +74,7 @@ export default class PhemeStorageIPFS implements IStorage {
     return ipfsHash ? `${this.gatewayUrl}/ipfs/${ipfsHash}` : '';
   }
 
-  async readData(address: string) {
+  public async readData(address: string) {
     // https://github.com/axios/axios/issues/907
     // https://github.com/axios/axios/issues/1516
     const { data } = await axios.get(this.publicUrlFor(address), {
@@ -87,16 +85,16 @@ export default class PhemeStorageIPFS implements IStorage {
     return Buffer.from(data);
   }
 
-  async writeData(data: Buffer) {
+  public async writeData(data: Buffer) {
     const [{ hash }] = await this.ipfs.add(data);
     return `ipfs://${hash}`;
   }
 
-  async readObject(address: string): Promise<any> {
+  public async readObject(address: string): Promise<any> {
     return this.deserialize((await this.readData(address)).toString());
   }
 
-  async writeObject(object: any): Promise<string> {
+  public async writeObject(object: any): Promise<string> {
     return this.writeData(Buffer.from(this.serialize(object)));
   }
 }

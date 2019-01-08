@@ -1,17 +1,17 @@
 import assert = require('assert');
+import utils = require('web3-utils');
 
 declare var artifacts: any;
 declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
 
 const StorageContract = artifacts.require('Storage');
 const RegistryContract = artifacts.require('Registry');
-const utils = require('web3-utils');
 
 const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
 const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';
 
 const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find((log) => log.event === event);
+  const log = tx.logs.find((cursor) => cursor.event === event);
   const argsToCompare = Object.keys(args).reduce(
     (acc, key) => ({ ...acc, [key]: log.args[key] }),
     {}
@@ -30,7 +30,6 @@ const assertRejection = (promise) =>
 contract('Registry', (accounts) => {
   let storage;
   let registry;
-  let withEvent;
   let owner;
   let otherUser;
 

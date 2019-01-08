@@ -7,41 +7,47 @@ const mockTask = (fn) =>
   }));
 
 export default class PhemeTestRegistry implements IRegistry {
-  records: { [handle: string]: any } = {};
+  public records: { [handle: string]: any } = {};
 
-  register = mockTask((handle: string) => {
+  public register = mockTask((handle: string) => {
     if (this.records[handle]) throw new Error('Handle already exists');
     this.records[handle] = {};
     return Promise.resolve();
   });
 
-  getPointer = mockTask((handle) => Promise.resolve(this.query(handle, 'pointer')));
-  setPointer = mockTask((handle, value) => Promise.resolve(this.update(handle, 'pointer', value)));
+  public getPointer = mockTask((handle) => Promise.resolve(this.query(handle, 'pointer')));
+  public setPointer = mockTask((handle, value) =>
+    Promise.resolve(this.update(handle, 'pointer', value))
+  );
 
-  getOwner = mockTask((handle) => Promise.resolve(this.query(handle, 'owner')));
-  setOwner = mockTask((handle, value) => Promise.resolve(this.update(handle, 'owner', value)));
+  public getOwner = mockTask((handle) => Promise.resolve(this.query(handle, 'owner')));
+  public setOwner = mockTask((handle, value) =>
+    Promise.resolve(this.update(handle, 'owner', value))
+  );
 
-  getProfile = mockTask((handle) => Promise.resolve(this.query(handle, 'profile')));
-  setProfile = mockTask((handle, value) => Promise.resolve(this.update(handle, 'profile', value)));
+  public getProfile = mockTask((handle) => Promise.resolve(this.query(handle, 'profile')));
+  public setProfile = mockTask((handle, value) =>
+    Promise.resolve(this.update(handle, 'profile', value))
+  );
 
-  getLatestHandles = mockTask((limit) => {
+  public getLatestHandles = mockTask((limit) => {
     const handles = Object.keys(this.records)
       .reverse()
       .splice(0, limit);
     return Promise.resolve(handles);
   });
 
-  getHandleByOwner = mockTask((owner) =>
+  public getHandleByOwner = mockTask((owner) =>
     Promise.resolve(
       Object.keys(this.records).find((handle) => this.query(handle, 'owner') === owner)
     )
   );
 
-  update(handle: string, key: string, value: any) {
+  public update(handle: string, key: string, value: any) {
     this.records[handle][key] = value;
   }
 
-  query(handle: string, key: string) {
+  public query(handle: string, key: string) {
     return this.records[handle][key];
   }
 }

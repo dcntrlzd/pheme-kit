@@ -5,41 +5,52 @@ type Contract = any;
 type ContractMethodCall = any;
 
 export default class PhemeRegistry implements IRegistry {
+  private static stringToBytes(input: string): string {
+    return ethers.utils.formatBytes32String(input);
+  }
+
+  private static bytesToString(input: string): string {
+    return ethers.utils.parseBytes32String(input);
+  }
+
+  private static weiToEther(wei: number): number {
+    return Number(ethers.utils.formatEther(wei));
+  }
   public contract: ethers.ethers.Contract;
 
   constructor(contract: ethers.ethers.Contract) {
     this.contract = contract;
   }
 
-  register(handle: string): ITask {
+  public register(handle: string): ITask {
     return this.buildSetterTask('registerHandle', [PhemeRegistry.stringToBytes(handle)]);
   }
 
-  getPointer(handle: string): ITask<string> {
+  public getPointer(handle: string): ITask<string> {
     return this.buildGetterTask('getHandlePointer', [PhemeRegistry.stringToBytes(handle)]);
   }
 
-  setPointer(handle: string, value: string = ''): ITask {
+  public setPointer(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandlePointer', [PhemeRegistry.stringToBytes(handle), value]);
   }
 
-  getProfile(handle: string): ITask<string> {
+  public getProfile(handle: string): ITask<string> {
     return this.buildGetterTask('getHandleProfile', [PhemeRegistry.stringToBytes(handle)]);
   }
 
-  setProfile(handle: string, value: string = ''): ITask {
+  public setProfile(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandleProfile', [PhemeRegistry.stringToBytes(handle), value]);
   }
 
-  getOwner(handle: string): ITask<string> {
+  public getOwner(handle: string): ITask<string> {
     return this.buildGetterTask('getHandleOwner', [PhemeRegistry.stringToBytes(handle)]);
   }
 
-  setOwner(handle: string, value: string = ''): ITask {
+  public setOwner(handle: string, value: string = ''): ITask {
     return this.buildSetterTask('setHandleOwner', [PhemeRegistry.stringToBytes(handle), value]);
   }
 
-  getHandleAt(index: number): ITask<string> {
+  public getHandleAt(index: number): ITask<string> {
     const task = this.buildGetterTask('getHandleAt', [index]);
 
     return modifyTask(task, {
@@ -48,29 +59,17 @@ export default class PhemeRegistry implements IRegistry {
     });
   }
 
-  getHandleCount(): ITask<number> {
+  public getHandleCount(): ITask<number> {
     return this.buildGetterTask('getHandleCount');
   }
 
-  getHandleByOwner(owner: string): ITask<string> {
+  public getHandleByOwner(owner: string): ITask<string> {
     const task = this.buildGetterTask('getHandleByOwner', [owner]);
 
     return modifyTask(task, {
       execute: () =>
         task.execute().then((handleAsBytes: string) => PhemeRegistry.bytesToString(handleAsBytes)),
     });
-  }
-
-  private static stringToBytes(string: string): string {
-    return ethers.utils.formatBytes32String(string);
-  }
-
-  private static bytesToString(bytes: string): string {
-    return ethers.utils.parseBytes32String(bytes);
-  }
-
-  private static weiToEther(wei: number): number {
-    return Number(ethers.utils.formatEther(wei));
   }
 
   private buildGetterTask<T>(methodName: string, args: any[] = [], options: any = {}): ITask<T> {
@@ -93,8 +92,9 @@ export default class PhemeRegistry implements IRegistry {
     };
 
     const estimateGas = (): Promise<number> => {
-      if (!estimateGasPromise)
+      if (!estimateGasPromise) {
         estimateGasPromise = this.contract.estimate[methodName](...args, options);
+      }
       return estimateGasPromise;
     };
 

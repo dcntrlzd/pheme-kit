@@ -10,7 +10,7 @@ import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
 
 const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find((log) => log.event === event);
+  const log = tx.logs.find((cursor) => cursor.event === event);
   assert.deepStrictEqual(log.args, args);
 };
 
@@ -31,9 +31,13 @@ contract('E2E Test', (accounts) => {
     registry = await Registry.deployed();
 
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
-    const contract = new ethers.Contract(registry.address, registry.abi, provider.getSigner());
+    const registryContract = new ethers.Contract(
+      registry.address,
+      registry.abi,
+      provider.getSigner()
+    );
 
-    const phemeRegistry = new PhemeRegistry(contract);
+    const phemeRegistry = new PhemeRegistry(registryContract);
 
     ipfsServer = await new Promise((resolve, reject) => {
       IPFSFactory.create().spawn((err, ipfsd) => {

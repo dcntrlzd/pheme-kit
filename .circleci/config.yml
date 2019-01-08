@@ -17,6 +17,7 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "yarn.lock" }}
+      - run: yarn lint:check
       - run: yarn format:check
       - run:
           command: yarn test

@@ -4,7 +4,6 @@ import Contract from '../test/contract';
 const HANDLE = 'test';
 
 describe('registry', () => {
-  let otherUser: string;
   let instance: Registry;
 
   beforeEach(() => {

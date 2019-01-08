@@ -19,6 +19,7 @@
     "truffle": "^5.0.0",
     "ts-jest": "^23.10.4",
     "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
     "typescript": "^3.2.2",
     "web3-utils": "^1.0.0-beta.36"
   },
@@ -27,7 +28,9 @@
     "test": "jest && lerna run test",
     "tsc": "lerna exec tsc --",
     "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
-    "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}"
+    "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}",
+    "lint:fix": "tslint -c tslint.json --fix -t verbose '{packages,e2e}/**/*.{js,ts}'",
+    "lint:check": "tslint -c tslint.json -t verbose '{packages,e2e}/**/*.{js,ts}'"
   },
   "workspaces": [
     "packages/*",

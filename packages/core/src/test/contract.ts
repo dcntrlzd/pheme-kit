@@ -20,7 +20,7 @@ const Contract: any = jest.fn(() => {
         return Promise.resolve(new BigNumber(count));
       }),
       getHandleByOwner: jest.fn((owner) => {
-        const handle = Object.keys(storage).find((handle) => storage[handle].owner === owner) || '';
+        const handle = Object.keys(storage).find((cursor) => storage[cursor].owner === owner) || '';
         return Promise.resolve(handle);
       }),
       registerHandle: jest.fn((handle) => {
