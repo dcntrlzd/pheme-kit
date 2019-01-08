@@ -57,7 +57,7 @@ After that you'll be able to work on it and then you can use `yarn test` to run 
 1. Fork the repo on GitHub
 2. Clone the project to your own machine
 3. Commit changes to your own branch
-4. Push your work back up to your fork (Be sure you have tests and all tests are green).
+4. Push your work back up to your fork (Be sure you have tests and all checks & tests are green).
 5. Submit a Pull request so that we can review your changes
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
