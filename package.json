@@ -26,7 +26,8 @@
     "bootstrap": "lerna bootstrap",
     "test": "jest && lerna run test",
     "tsc": "lerna exec tsc --",
-    "format": "prettier --write {packages,e2e}/**/*.{js,ts}"
+    "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
+    "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}"
   },
   "workspaces": [
     "packages/*",

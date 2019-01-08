@@ -17,6 +17,7 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "yarn.lock" }}
+      - run: yarn format:check
       - run:
           command: yarn test
           no_output_timeout: 3m
