@@ -6,6 +6,13 @@ type Contract = any;
 type ContractMethodCall = any;
 
 export default class PhemeRegistry implements IRegistry {
+  public static attach(
+    address: string,
+    providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer
+  ): PhemeRegistry {
+    const contract = new ethers.Contract(address, RegistryAbi, providerOrSigner);
+    return new PhemeRegistry(contract);
+  }
   private static stringToBytes(input: string): string {
     return ethers.utils.formatBytes32String(input);
   }
@@ -19,11 +26,6 @@ export default class PhemeRegistry implements IRegistry {
   }
 
   public contract: ethers.ethers.Contract;
-
-  public static attach(address: string, providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer): PhemeRegistry {
-    const contract = new ethers.Contract(address, RegistryAbi, providerOrSigner)
-    return new PhemeRegistry(contract);
-  }
 
   constructor(contract: ethers.Contract) {
     this.contract = contract;

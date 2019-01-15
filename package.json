@@ -30,8 +30,8 @@
     "build": "lerna run prepack --ignore e2e",
     "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
     "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}",
-    "lint:fix": "tslint -c tslint.json --fix -t verbose '{packages,e2e}/**/*.{js,ts}'",
-    "lint:check": "tslint -c tslint.json -t verbose '{packages,e2e}/**/*.{js,ts}'"
+    "lint:fix": "tslint -c tslint.json --fix -t verbose '{packages,e2e}/{src,test}/**/*.{js,ts}'",
+    "lint:check": "tslint -c tslint.json -t verbose '{packages,e2e}/{src,test}/**/*.{js,ts}'"
   },
   "workspaces": [
     "packages/*",

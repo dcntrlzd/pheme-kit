@@ -13,5 +13,3 @@ glob(path.resolve(__dirname, './build/contracts/*.json'), (err, files) => {
     fs.writeFileSync(`${baseName}.bytecode.json`, JSON.stringify(bytecode));
   });
 });
-
-
