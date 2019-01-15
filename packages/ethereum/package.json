@@ -13,13 +13,21 @@
     "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
   },
   "files": [
-    "contracts/**/*"
+    "contracts/**/*",
+    "artifacts/**/*"
   ],
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com",
     "access": "public"
   },
   "scripts": {
-    "test": "truffle test"
+    "truffle": "truffle",
+    "build": "rimraf ./build ./artifacts && truffle compile && node ./split-artifacts.js",
+    "test": "truffle test",
+    "prepack": "yarn build"
+  },
+  "devDependencies": {
+    "glob": "^7.1.3",
+    "rimraf": "^2.6.3"
   }
 }

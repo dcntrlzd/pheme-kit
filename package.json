@@ -27,6 +27,7 @@
     "bootstrap": "lerna bootstrap",
     "test": "jest && lerna run test",
     "tsc": "lerna exec tsc --",
+    "build": "lerna run prepack --ignore e2e",
     "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
     "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}",
     "lint:fix": "tslint -c tslint.json --fix -t verbose '{packages,e2e}/**/*.{js,ts}'",

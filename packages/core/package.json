@@ -15,6 +15,7 @@
   },
   "files": [
     "lib/index.*",
+    "lib/storage-proxy/index.*",
     "lib/registry/index.*"
   ],
   "scripts": {
@@ -27,7 +28,7 @@
   },
   "dependencies": {
     "@pheme-kit/ethereum": "^0.0.0",
-    "ethers": "^4.0.12",
+    "ethers": "^4.0.21",
     "uuid": "^3.3.2"
   }
 }

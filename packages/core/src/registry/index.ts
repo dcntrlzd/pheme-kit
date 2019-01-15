@@ -1,5 +1,6 @@
 import * as ethers from 'ethers';
 import { modifyTask, createTask, IRegistry, ITask } from '../index';
+import RegistryAbi from '@pheme-kit/ethereum/artifacts/Registry.abi.json';
 
 type Contract = any;
 type ContractMethodCall = any;
@@ -16,9 +17,15 @@ export default class PhemeRegistry implements IRegistry {
   private static weiToEther(wei: number): number {
     return Number(ethers.utils.formatEther(wei));
   }
+
   public contract: ethers.ethers.Contract;
 
-  constructor(contract: ethers.ethers.Contract) {
+  public static attach(address: string, providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer): PhemeRegistry {
+    const contract = new ethers.Contract(address, RegistryAbi, providerOrSigner)
+    return new PhemeRegistry(contract);
+  }
+
+  constructor(contract: ethers.Contract) {
     this.contract = contract;
   }
 
