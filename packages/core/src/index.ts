@@ -1,5 +1,7 @@
 import { v4 as generateUuid } from 'uuid';
 import StorageProxy, { IStorageMap } from './storage-proxy';
+import PhemeRegistry from './registry';
+
 export { StorageProxy };
 
 export interface ITask<T = void> {
@@ -79,11 +81,11 @@ export function modifyTask<Z, Y>(task: Z, modifications: Y): Z & Y {
   }) as Z & Y;
 }
 
-export default class Pheme<Registry extends IRegistry> {
-  public readonly registry: Registry;
+export default class Pheme {
+  public readonly registry: PhemeRegistry;
   public readonly storage: StorageProxy;
 
-  constructor(registry: Registry, storageMap: IStorageMap = {}) {
+  constructor(registry: PhemeRegistry, storageMap: IStorageMap = {}) {
     if (!registry) throw new Error('Cannot initialize without a valid registry supplied.');
 
     this.registry = registry;

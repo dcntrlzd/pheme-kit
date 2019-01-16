@@ -3,3 +3,4 @@ node_modules
 packages/*/build
 packages/*/lib
 packages/*/artifacts
+docs

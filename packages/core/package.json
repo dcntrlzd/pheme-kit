@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "prepack": "tsc",
-    "postpack": "rm -rf ./lib"
+    "postpack": "rm -rf ./lib",
+    "build-docs": "typedoc --options ../../typedoc.js --mode modules --toc ."
   },
   "publishConfig": {
     "access": "public"
