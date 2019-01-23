@@ -13,11 +13,6 @@
     "target": "es2017",
     "jsx": "react",
     "lib": ["es6","es7", "dom"],
-    "baseUrl": ".",
-    "paths": {
-      "@pheme-kit/core": [ "./packages/core/src" ],
-      "@pheme-kit/core/*": [ "./packages/core/src/*" ],
-      "*": [ "./packages/*" ]
-    }
+    "baseUrl": "."
   }
 }
