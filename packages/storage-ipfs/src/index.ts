@@ -1,4 +1,4 @@
-import { IStorage } from '@pheme-kit/core/src';
+import { IStorage } from '@pheme-kit/core';
 import * as URL from 'url';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';

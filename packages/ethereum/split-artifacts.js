@@ -5,7 +5,7 @@ const fs = require('fs');
 const artifactsDirectory = path.resolve(__dirname, './artifacts');
 fs.mkdirSync(artifactsDirectory, { recursive: true });
 
-glob(path.resolve(__dirname, './artifacts/*.json'), (err, files) => {
+glob(path.join(artifactsDirectory, 'full', '*.json'), (err, files) => {
   files.forEach((file) => {
     const { contractName, abi, bytecode } = require(file);
     const baseName = path.join(artifactsDirectory, contractName);
