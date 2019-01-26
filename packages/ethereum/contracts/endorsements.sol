@@ -1,7 +1,7 @@
 pragma solidity ^0.4.25;
 
 import "./ownable.sol";
-import "./storage.sol";
+import "./registry.sol";
 
 contract Endorsements is Ownable {
   struct Endorsement {
@@ -9,15 +9,22 @@ contract Endorsements is Ownable {
     uint amount;
   }
 
-  Storage handleStorage = Storage(0);
+  Registry registry = Registry(0);
   uint serviceFeeRatioAsWei = 10000000000000000; // 0.01 after ether conversion so 1%
   mapping(bytes32 => Endorsement[]) private map;
 
   event EndorsementAdded(address indexed endorser, bytes32 indexed handle, bytes32 indexed hashedUuid);
   event EndorsementRemoved(address indexed endorser, bytes32 indexed handle, bytes32 indexed hashedUuid);
 
-  constructor(address handleStorageAddress) public {
-    handleStorage = Storage(handleStorageAddress);
+  constructor(address registryAddress) public {
+    registry = Registry(registryAddress);
+  }
+
+  function setRegistry(address registryAddress)
+    external
+    onlyOwner
+  {
+    registry = Registry(registryAddress);
   }
 
   function getEndorsementCount(bytes32 handle, string uuid) public view returns (uint endorsementCount) {
@@ -37,7 +44,8 @@ contract Endorsements is Ownable {
 
   function endorse(bytes32 handle, string uuid) payable external {
     address endorser = msg.sender;
-    address endorsee = handleStorage.getAddress(handle, keccak256("owner"));
+    address endorsee = registry.getHandleOwner(handle);
+
     require (endorsee != address(0));
 
     uint amount = msg.value;

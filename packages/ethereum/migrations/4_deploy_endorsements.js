@@ -1,17 +1,14 @@
-var Storage = artifacts.require("./Storage.sol");
+var Registry = artifacts.require("./Registry.sol");
 var Endorsements = artifacts.require("./Endorsements.sol");
 
 module.exports = async (deployer) => {
-  let storage;
+  let registry;
   let endorsements;
 
   deployer
-    .then(() => Storage.deployed())
+    .then(() => Registry.deployed())
     .then((instance) => {
-      storage = instance;
-      return deployer.deploy(Endorsements, storage.address);
-    }).then((instance) => {
-      endorsements = instance;
-      return storage.addOwner(endorsements.address);
+      registry = instance;
+      return deployer.deploy(Endorsements, registry.address);
     });
 };
