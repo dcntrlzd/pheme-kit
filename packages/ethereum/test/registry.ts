@@ -1,34 +1,14 @@
 import assert = require('assert');
 import utils = require('web3-utils');
 
-declare var artifacts: any;
-declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
+import { assertTxEvent, assertRejection } from './utils';
 
-const StorageContract = artifacts.require('Storage');
 const RegistryContract = artifacts.require('Registry');
 
 const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
 const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';
 
-const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find((cursor) => cursor.event === event);
-  const argsToCompare = Object.keys(args).reduce(
-    (acc, key) => ({ ...acc, [key]: log.args[key] }),
-    {}
-  );
-  assert.deepStrictEqual(args, argsToCompare);
-};
-
-const assertRejection = (promise) =>
-  promise.then(
-    () => {
-      throw new Error('Should not resolve');
-    },
-    () => assert.ok(true)
-  );
-
 contract('Registry', (accounts) => {
-  let storage;
   let registry;
   let owner;
   let otherUser;
@@ -38,7 +18,6 @@ contract('Registry', (accounts) => {
 
   before(async () => {
     [owner, otherUser] = accounts;
-    storage = await StorageContract.deployed();
     registry = await RegistryContract.deployed();
   });
 

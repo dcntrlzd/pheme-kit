@@ -1,5 +1,5 @@
-var Registry = artifacts.require("./Registry.sol");
-var Endorsements = artifacts.require("./Endorsements.sol");
+var Registry = artifacts.require('./Registry.sol');
+var Endorsements = artifacts.require('./Endorsements.sol');
 
 module.exports = async (deployer) => {
   let registry;

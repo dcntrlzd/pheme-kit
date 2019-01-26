@@ -22,7 +22,7 @@
   "scripts": {
     "truffle": "truffle",
     "build-artifacts": "rimraf ./artifacts && truffle compile && node ./split-artifacts.js",
-    "test": "truffle test",
+    "test": "TS_NODE_FILES=1 truffle test",
     "prepack": "yarn build-artifacts"
   }
 }

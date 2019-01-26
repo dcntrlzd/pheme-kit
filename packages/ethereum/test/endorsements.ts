@@ -1,20 +1,17 @@
-const Storage = artifacts.require('Storage');
-const Registry = artifacts.require('Registry');
-const Endorsements = artifacts.require('Endorsements');
-const utils = require('web3-utils');
+import assert = require('assert');
+import utils = require('web3-utils');
 
-const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find(log => log.event === event);
-  const argsToCompare = Object.keys(args).reduce((acc, key) => ({ ...acc, [key]: log.args[key] }), {});
-  assert.deepStrictEqual(args, argsToCompare);
-}
+import { assertTxEvent, assertRejection } from './utils';
 
-const assertRejection = promise => promise.then(() => { throw new Error('Should not resolve'); }, () => assert.ok(true));
+const RegistryContract = artifacts.require('Registry');
+const EndorsementsContracts = artifacts.require('Endorsements');
 
 contract("Endorsements", (accounts) => {
   let storage;
   let registry;
   let endorsements;
+  let endorsee;
+  let endorser;
   let owner;
   let otherUser;
 
@@ -25,9 +22,8 @@ contract("Endorsements", (accounts) => {
 
   before(async () => {
     ([owner, endorsee, endorser] = accounts);
-    storage = await Storage.deployed();
-    registry = await Registry.deployed();
-    endorsements = await Endorsements.deployed();
+    registry = await RegistryContract.deployed();
+    endorsements = await EndorsementsContracts.deployed();
 
     await registry.registerHandle(handle, { from: endorsee });
   });
