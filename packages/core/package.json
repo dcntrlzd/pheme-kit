@@ -1,0 +1,34 @@
+{
+  "name": "@pheme-kit/core",
+  "version": "0.0.1-alpha.3",
+  "description": "> TODO: description",
+  "author": "Baris Gumustas <barisg@dcntrlzd.io>",
+  "homepage": "https://github.com/dcntrlzd/pheme-protocol",
+  "license": "MIT",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/index.*",
+    "lib/storage-proxy/index.*",
+    "lib/registry/index.*"
+  ],
+  "scripts": {
+    "prepack": "tsc",
+    "postpack": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@pheme-kit/ethereum": "^0.0.1-alpha.3",
+    "ethers": "^4.0.21",
+    "uuid": "^3.3.2"
+  }
+}

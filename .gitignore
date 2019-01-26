@@ -1,2 +1,6 @@
 node_modules
 *.log
+build
+packages/*/build
+packages/*/lib
+packages/*/artifacts

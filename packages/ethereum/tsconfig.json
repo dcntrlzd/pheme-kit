@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types" : ["node", "bn.js", "uuid", "chai", "mocha"]
+  },
+  "include": [
+    "./test/**/*",
+  ]
+}

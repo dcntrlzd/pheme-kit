@@ -5,17 +5,14 @@
     "sourceMap": true,
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "declaration": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "module": "commonjs",
     "target": "es2017",
     "jsx": "react",
-    "lib": ["es6","es7","dom"],
-    "baseUrl": ".",
-    "paths": {
-      "*": [ "packages/*" ]
-    }
-  },
-  "include": [
-    "./packages/**/*",
-  ]
+    "lib": ["es6","es7", "dom"],
+    "baseUrl": "."
+  }
 }

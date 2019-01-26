@@ -1,33 +1,54 @@
 {
-  "name": "pheme-protocol",
+  "name": "pheme-kit",
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@types/bn.js": "^4.11.3",
+    "@types/chai": "^4.1.7",
     "@types/jest": "^23.3.9",
     "@types/node": "^10.12.7",
     "@types/uuid": "^3.4.3",
-    "@types/bn.js": "^4.11.3",
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.5",
-    "jest": "^23.6.0",
-    "lerna": "^3.4.3",
-    "ts-jest": "^23.10.4",
-    "ts-node": "^7.0.1",
-    "typescript": "^3.1.6",
-    "truffle": "^5.0.0",
-    "web3-utils": "^1.0.0-beta.36",
     "bn.js": "^4.11.8",
     "ganache-core": "^2.2.1",
+    "go-ipfs-dep": "^0.4.18",
     "ipfsd-ctl": "^0.40.0",
-    "go-ipfs-dep": "^0.4.18"
+    "jest": "^23.6.0",
+    "lerna": "^3.4.3",
+    "prettier": "1.15.3",
+    "truffle": "^5.0.0",
+    "ts-jest": "^23.10.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2",
+    "web3-utils": "^1.0.0-beta.36",
+    "glob": "^7.1.3",
+    "rimraf": "^2.6.3"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "test": "jest && lerna run test"
+    "test": "yarn cleanup && yarn build-artifacts && jest && lerna run test",
+    "tsc": "lerna exec tsc --",
+    "build-artifacts": "lerna run build-artifacts",
+    "build": "lerna run prepack --ignore e2e",
+    "cleanup": "rimraf ./packages/*/lib ./packages/*/build ./packages/*/artifacts",
+    "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
+    "format:check": "prettier --list-different {packages,e2e}/**/*.{js,ts}",
+    "lint:fix": "tslint -c tslint.json --fix -t verbose '{packages,e2e}/{src,test}/**/*.{js,ts}'",
+    "lint:check": "tslint -c tslint.json -t verbose '{packages,e2e}/{src,test}/**/*.{js,ts}'"
   },
   "workspaces": [
     "packages/*",
     "e2e"
-  ]
+  ],
+  "prettier": {
+    "trailingComma": "es5",
+    "bracketSpacing": true,
+    "tabWidth": 2,
+    "semi": true,
+    "arrowParens": "always",
+    "endOfLine": "lf",
+    "printWidth": 100,
+    "singleQuote": true
+  }
 }

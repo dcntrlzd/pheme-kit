@@ -1,23 +1,23 @@
-import Pheme from '@dcntrlzd/pheme/src';
-import PhemeRegistry from '@dcntrlzd/pheme/src/registry';
-import PhemeStorageIpfs from '@dcntrlzd/pheme-storage-ipfs/src';
+declare var artifacts: any;
+declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
+
+import Pheme from '@pheme-kit/core/src';
+import PhemeRegistry from '@pheme-kit/core/src/registry';
+import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 
 import assert = require('assert');
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
 
-declare var artifacts: any;
-declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
-
 const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find(log => log.event === event);
+  const log = tx.logs.find((cursor) => cursor.event === event);
   assert.deepStrictEqual(log.args, args);
-}
+};
 
 const HANDLE = 'test';
 const PROFILE = { description: 'HELLO' };
 
-contract("E2E Test", (accounts) => {
+contract('E2E Test', (accounts) => {
   const Registry: any = artifacts.require('Registry');
   let registry: any;
 
@@ -27,13 +27,17 @@ contract("E2E Test", (accounts) => {
   let provider: ethers.providers.Web3Provider;
 
   before(async () => {
-    ([owner] = accounts);
+    [owner] = accounts;
     registry = await Registry.deployed();
 
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
-    const contract = new ethers.Contract(registry.address, registry.abi, provider.getSigner());
+    const registryContract = new ethers.Contract(
+      registry.address,
+      registry.abi,
+      provider.getSigner()
+    );
 
-    const phemeRegistry = new PhemeRegistry(contract);
+    const phemeRegistry = new PhemeRegistry(registryContract);
 
     ipfsServer = await new Promise((resolve, reject) => {
       IPFSFactory.create().spawn((err, ipfsd) => {
@@ -47,7 +51,10 @@ contract("E2E Test", (accounts) => {
     });
 
     pheme = new Pheme(phemeRegistry, {
-      ipfs: new PhemeStorageIpfs(`http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`, `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`)
+      ipfs: new PhemeStorageIpfs(
+        `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
+        `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`
+      ),
     });
   });
 
@@ -63,8 +70,14 @@ contract("E2E Test", (accounts) => {
     const chainBefore = await pheme.loadHandle(HANDLE).execute();
     assert.deepEqual(chainBefore, [undefined, []]);
 
-    await pheme.pushToHandle(HANDLE, Buffer.from('# FIRST\nLorem ipsum dolor sit amet.'), { title: 'FIRST' }).execute();
-    await pheme.pushToHandle(HANDLE, Buffer.from('# SECOND\nLorem ipsum dolor sit amet.'), { title: 'SECOND' }).execute();
+    await pheme
+      .pushToHandle(HANDLE, Buffer.from('# FIRST\nLorem ipsum dolor sit amet.'), { title: 'FIRST' })
+      .execute();
+    await pheme
+      .pushToHandle(HANDLE, Buffer.from('# SECOND\nLorem ipsum dolor sit amet.'), {
+        title: 'SECOND',
+      })
+      .execute();
 
     const [initialPointer, chain] = await pheme.loadHandle(HANDLE).execute();
     assert(initialPointer);
@@ -74,7 +87,7 @@ contract("E2E Test", (accounts) => {
 
     assert(firstPost.uuid);
     assert(firstPost.address);
-    assert(firstPost.timestamp)
+    assert(firstPost.timestamp);
     assert.deepEqual(firstPost.meta, { title: 'FIRST' });
     assert(!firstPost.previous);
     const firstPostContent = await pheme.storage.readData(firstPost.address);
@@ -82,14 +95,20 @@ contract("E2E Test", (accounts) => {
 
     assert(secondPost.uuid);
     assert(secondPost.address);
-    assert(secondPost.timestamp)
+    assert(secondPost.timestamp);
     assert.deepEqual(secondPost.meta, { title: 'SECOND' });
     assert(secondPost.previous);
     const secondPostContent = await pheme.storage.readData(secondPost.address);
     assert(secondPostContent.toString(), '# SECOND\nLorem ipsum dolor sit amet.');
 
-    await pheme.replaceFromHandle(HANDLE, secondPost.uuid, Buffer.from("# SECOND MODIFIED"), { title: 'SECOND MODIFIED' }).execute();
-    const [modifiedPointer, [modifedSecondPost, unmodifiedFirstPost]] = await pheme.loadHandle(HANDLE).execute();
+    await pheme
+      .replaceFromHandle(HANDLE, secondPost.uuid, Buffer.from('# SECOND MODIFIED'), {
+        title: 'SECOND MODIFIED',
+      })
+      .execute();
+    const [modifiedPointer, [modifedSecondPost, unmodifiedFirstPost]] = await pheme
+      .loadHandle(HANDLE)
+      .execute();
     assert.notEqual(modifiedPointer, initialPointer);
     assert.deepEqual(unmodifiedFirstPost, firstPost);
 
@@ -102,7 +121,7 @@ contract("E2E Test", (accounts) => {
     const modifedSecondPostContent = await pheme.storage.readData(modifedSecondPost.address);
     assert(modifedSecondPostContent.toString(), '# SECOND MODIFIED');
 
-    await pheme.pushToHandle(HANDLE, Buffer.from('# THIRD'), { title: 'THIRD'}).execute();
+    await pheme.pushToHandle(HANDLE, Buffer.from('# THIRD'), { title: 'THIRD' }).execute();
     await pheme.removeFromHandle(HANDLE, modifedSecondPost.uuid).execute();
     const [finalPointer, [thirdPost, waybackFirstPost]] = await pheme.loadHandle(HANDLE).execute();
 
@@ -118,4 +137,3 @@ contract("E2E Test", (accounts) => {
     assert(thirdPostContent.toString(), '# THIRD');
   });
 });
-
