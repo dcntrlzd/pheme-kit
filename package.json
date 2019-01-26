@@ -27,8 +27,9 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "test": "yarn cleanup && lerna run build-artifacts && jest && lerna run test",
+    "test": "yarn cleanup && yarn build-artifacts && jest && lerna run test",
     "tsc": "lerna exec tsc --",
+    "build-artifacts": "lerna run build-artifacts",
     "build": "lerna run prepack --ignore e2e",
     "cleanup": "rimraf ./packages/*/lib ./packages/*/build ./packages/*/artifacts",
     "format:fix": "prettier --write {packages,e2e}/**/*.{js,ts}",
