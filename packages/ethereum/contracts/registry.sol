@@ -153,7 +153,7 @@ contract Registry is Ownable {
   }
 
   // Make the contract killable
-  function kill() onlyOwner {
+  function kill() onlyOwner public {
     selfdestruct(msg.sender);
   }
 }

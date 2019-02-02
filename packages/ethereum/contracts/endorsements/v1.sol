@@ -1,9 +1,9 @@
 pragma solidity ^0.4.25;
 
-import "./ownership/ownable.sol";
-import "./registry.sol";
+import "../ownership/ownable.sol";
+import "../registry.sol";
 
-contract Endorsements is Ownable {
+contract EndorsementsV1 is Ownable {
   struct Endorsement {
     address endorser;
     uint amount;
@@ -46,7 +46,7 @@ contract Endorsements is Ownable {
     address endorser = msg.sender;
     address endorsee = registry.getHandleOwner(handle);
 
-    require (endorsee != address(0));
+    require(endorsee != address(0));
 
     uint amount = msg.value;
     uint serviceFee = calculateServiceFee(amount);
@@ -64,7 +64,7 @@ contract Endorsements is Ownable {
   }
 
   // Make the contract killable
-  function kill() onlyOwner {
+  function kill() onlyOwner public {
     selfdestruct(msg.sender);
   }
 }

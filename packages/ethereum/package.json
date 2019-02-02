@@ -23,7 +23,8 @@
     "truffle": "truffle",
     "build-artifacts": "rimraf ./artifacts && truffle compile && node ./split-artifacts.js",
     "test": "TS_NODE_FILES=1 truffle test",
-    "prepack": "yarn build-artifacts"
+    "prepack": "yarn build-artifacts",
+    "lint": "solium --fix --dir ./contracts"
   },
   "devDependencies": {
     "ethlint": "^1.2.2"
