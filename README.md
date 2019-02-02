@@ -1,6 +1,6 @@
 # Pheme Kit
 
-[![CircleCI](https://circleci.com/gh/dcntrlzd/pheme-kit/tree/master.svg?style=svg&circle-token=1c842477837bb51978d788deac915abe629d0302)](https://circleci.com/gh/dcntrlzd/pheme-kit/tree/master)
+[![CircleCI](https://img.shields.io/circleci/project/github/dcntrlzd/pheme-kit/master.svg)](https://circleci.com/gh/dcntrlzd/pheme-kit/tree/master)
 
 Pheme Kit allows decentralized publishing of content feeds using IPFS and Ethereum. This repository contains the Ethereum smart contracts and javascript libraries which allows you to build and deploy your decentralized content feeds.
 

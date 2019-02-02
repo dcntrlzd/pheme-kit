@@ -1,7 +1,7 @@
 {
   "name": "@pheme-kit/ethereum",
   "version": "0.0.1-alpha.3",
-  "description": "> TODO: description",
+  "description": "Pheme Kit Ethereum smart contracts and artifacts",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
   "homepage": "https://github.com/dcntrlzd/pheme-protocol",
   "license": "MIT",
