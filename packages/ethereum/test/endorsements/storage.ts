@@ -5,8 +5,8 @@ import { assertTxEvent, assertRejection } from '../utils';
 
 const StorageContract = artifacts.require('EndorsementsStorage');
 
-describe("Endorsements", () => {
-  contract("Storage", (accounts) => {
+describe('Endorsements', () => {
+  contract('Storage', (accounts) => {
     let storage;
 
     const primaryKey = utils.fromUtf8('primary');
@@ -41,20 +41,28 @@ describe("Endorsements", () => {
       });
 
       const getterAndSetterTester = (getterMethod, setterMethod, value) => async () => {
-        const initialValue = await storage[getterMethod](primaryKey, secondaryKey, valueKey);
-        await storage[setterMethod](primaryKey, secondaryKey, valueKey, value);
+        const index = await storage.getSecondaryKeyIndex(primaryKey, secondaryKey);
+        const initialValue = await storage[getterMethod](primaryKey, index, valueKey);
+        await storage[setterMethod](primaryKey, index, valueKey, value);
 
-        const finalValue = await storage[getterMethod](primaryKey, secondaryKey, valueKey);
+        const finalValue = await storage[getterMethod](primaryKey, index, valueKey);
         assert.notEqual(finalValue, initialValue);
         assert.equal(finalValue, value);
       };
 
-      it('can set uint of a record', getterAndSetterTester('getUint','setUint', 10));
-      it('can set seting of a record', getterAndSetterTester('getString','setString', "test"))
-      it('can set address of a record', getterAndSetterTester('getAddress','setAddress', "0x29A5cdb637924ea266BDef0d590A98542702147F"))
-      it('can set int of a record', getterAndSetterTester('getInt','setInt', -10));
-      it('can set bytes of a record', getterAndSetterTester('getBytes','setBytes', valueKey));
-      it('can set bool of a record', getterAndSetterTester('getBool','setBool', true));
+      it('can set uint of a record', getterAndSetterTester('getUint', 'setUint', 10));
+      it('can set seting of a record', getterAndSetterTester('getString', 'setString', 'test'));
+      it(
+        'can set address of a record',
+        getterAndSetterTester(
+          'getAddress',
+          'setAddress',
+          '0x29A5cdb637924ea266BDef0d590A98542702147F'
+        )
+      );
+      it('can set int of a record', getterAndSetterTester('getInt', 'setInt', -10));
+      it('can set bytes of a record', getterAndSetterTester('getBytes', 'setBytes', valueKey));
+      it('can set bool of a record', getterAndSetterTester('getBool', 'setBool', true));
     });
   });
 });

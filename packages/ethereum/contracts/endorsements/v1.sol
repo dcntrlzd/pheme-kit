@@ -1,23 +1,26 @@
 pragma solidity ^0.4.25;
 
 import "../ownership/ownable.sol";
+import "./storage.sol";
 import "../registry.sol";
 
 contract EndorsementsV1 is Ownable {
+  EndorsementsStorage endorsementsStorage = EndorsementsStorage(0);
+  Registry registry = Registry(0);
+
   struct Endorsement {
     address endorser;
     uint amount;
   }
 
-  Registry registry = Registry(0);
   uint serviceFeeRatioAsWei = 10000000000000000; // 0.01 after ether conversion so 1%
-  mapping(bytes32 => Endorsement[]) private map;
 
   event EndorsementAdded(address indexed endorser, bytes32 indexed handle, bytes32 indexed hashedUuid);
   event EndorsementRemoved(address indexed endorser, bytes32 indexed handle, bytes32 indexed hashedUuid);
 
-  constructor(address registryAddress) public {
+  constructor(address endorsementsStorageAddress, address registryAddress) public {
     registry = Registry(registryAddress);
+    endorsementsStorage = EndorsementsStorage(endorsementsStorageAddress);
   }
 
   function setRegistry(address registryAddress)
@@ -27,19 +30,22 @@ contract EndorsementsV1 is Ownable {
     registry = Registry(registryAddress);
   }
 
+  function storagePrimaryKeyFor(bytes32 handle, string uuid) private pure returns (bytes32 primaryKey) {
+    return keccak256(abi.encodePacked(handle, uuid));
+  }
+
   function getEndorsementCount(bytes32 handle, string uuid) public view returns (uint endorsementCount) {
-    bytes32 key = keccak256(abi.encodePacked(handle, uuid));
-    return map[key].length;
+    return endorsementsStorage.getRecordCountFor(storagePrimaryKeyFor(handle, uuid));
   }
 
   function getEndorsementEndorser(bytes32 handle, string uuid, uint index) public view returns (address endorser) {
-    bytes32 key = keccak256(abi.encodePacked(handle, uuid));
-    return map[key][index].endorser;
+    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
+    return endorsementsStorage.getAddress(primaryKey, index, keccak256("endorser"));
   }
 
   function getEndorsementAmount(bytes32 handle, string uuid, uint index) public view returns (uint amount) {
-    bytes32 key = keccak256(abi.encodePacked(handle, uuid));
-    return map[key][index].amount;
+    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
+    return endorsementsStorage.getUint(primaryKey, index, keccak256("amount"));
   }
 
   function endorse(bytes32 handle, string uuid) payable external {
@@ -52,8 +58,14 @@ contract EndorsementsV1 is Ownable {
     uint serviceFee = calculateServiceFee(amount);
     uint endorseeShare = amount - serviceFee;
 
-    bytes32 key = keccak256(abi.encodePacked(handle, uuid));
-    map[key].push(Endorsement(endorser, amount));
+    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
+    bytes32 secondaryKey = keccak256(abi.encodePacked(endorser));
+
+    endorsementsStorage.addRecord(primaryKey, secondaryKey);
+    uint index = endorsementsStorage.getSecondaryKeyIndex(primaryKey, secondaryKey);
+
+    endorsementsStorage.setAddress(primaryKey, index, keccak256("endorser"), endorser);
+    endorsementsStorage.setUint(primaryKey, index, keccak256("amount"), amount);
 
     endorsee.transfer(endorseeShare);
     emit EndorsementAdded(endorser, handle, keccak256(abi.encodePacked(uuid)));

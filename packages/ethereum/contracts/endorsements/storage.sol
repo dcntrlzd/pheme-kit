@@ -47,8 +47,8 @@ contract EndorsementsStorage is MultiOwnable {
     return recordMap[primaryKey].length;
   }
 
-  function getSecondarKeyIndex(bytes32 primaryKey, bytes32 secondaryKey)
-    internal
+  function getSecondaryKeyIndex(bytes32 primaryKey, bytes32 secondaryKey)
+    public
     view
     returns(uint secondaryKeyIndex)
   {
@@ -56,103 +56,103 @@ contract EndorsementsStorage is MultiOwnable {
     return secondaryKeyLUT[compositeKey];
   }
 
-  function getRecord(bytes32 primaryKey, bytes32 secondaryKey)
+  function getRecord(bytes32 primaryKey, uint index)
     internal
     view
     returns(Record storage record)
   {
     require(recordMap[primaryKey].length > 0, "No record exists under primaryKey");
-    return recordMap[primaryKey][getSecondarKeyIndex(primaryKey, secondaryKey)];
+    return recordMap[primaryKey][index];
   }
 
-  function setUint(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, uint value)
+  function setUint(bytes32 primaryKey, uint index, bytes32 key, uint value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).uintMap[key] = value;
+    getRecord(primaryKey, index).uintMap[key] = value;
   }
 
-  function getUint(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getUint(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(uint value)
   {
-    return getRecord(primaryKey, secondaryKey).uintMap[key];
+    return getRecord(primaryKey, index).uintMap[key];
   }
 
-  function setString(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, string value)
+  function setString(bytes32 primaryKey, uint index, bytes32 key, string value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).stringMap[key] = value;
+    getRecord(primaryKey, index).stringMap[key] = value;
   }
 
-  function getString(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getString(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(string value)
   {
-    return getRecord(primaryKey, secondaryKey).stringMap[key];
+    return getRecord(primaryKey, index).stringMap[key];
   }
 
-  function setAddress(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, address value)
+  function setAddress(bytes32 primaryKey, uint index, bytes32 key, address value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).addressMap[key] = value;
+    getRecord(primaryKey, index).addressMap[key] = value;
   }
 
-  function getAddress(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getAddress(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(address value)
   {
-    return getRecord(primaryKey, secondaryKey).addressMap[key];
+    return getRecord(primaryKey, index).addressMap[key];
   }
 
-  function setInt(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, int value)
+  function setInt(bytes32 primaryKey, uint index, bytes32 key, int value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).intMap[key] = value;
+    getRecord(primaryKey, index).intMap[key] = value;
   }
 
-  function getInt(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getInt(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(int value)
   {
-    return getRecord(primaryKey, secondaryKey).intMap[key];
+    return getRecord(primaryKey, index).intMap[key];
   }
 
-  function setBytes(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, bytes value)
+  function setBytes(bytes32 primaryKey, uint index, bytes32 key, bytes value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).bytesMap[key] = value;
+    getRecord(primaryKey, index).bytesMap[key] = value;
   }
 
-  function getBytes(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getBytes(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(bytes value)
   {
-    return getRecord(primaryKey, secondaryKey).bytesMap[key];
+    return getRecord(primaryKey, index).bytesMap[key];
   }
 
-  function setBool(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key, bool value)
+  function setBool(bytes32 primaryKey, uint index, bytes32 key, bool value)
     external
     onlyOwner
   {
-    getRecord(primaryKey, secondaryKey).boolMap[key] = value;
+    getRecord(primaryKey, index).boolMap[key] = value;
   }
 
-  function getBool(bytes32 primaryKey, bytes32 secondaryKey, bytes32 key)
+  function getBool(bytes32 primaryKey, uint index, bytes32 key)
     external
     view
     returns(bool value)
   {
-    return getRecord(primaryKey, secondaryKey).boolMap[key];
+    return getRecord(primaryKey, index).boolMap[key];
   }
 }
 
