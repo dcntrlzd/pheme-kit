@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.25;
 
-import "./ownable.sol";
+import "./ownership/ownable.sol";
 import "./storage.sol";
 
 contract Registry is Ownable {
@@ -150,5 +150,10 @@ contract Registry is Ownable {
     returns(bytes32 handle)
   {
     return handleStorage.handleList(index);
+  }
+
+  // Make the contract killable
+  function kill() onlyOwner {
+    selfdestruct(msg.sender);
   }
 }

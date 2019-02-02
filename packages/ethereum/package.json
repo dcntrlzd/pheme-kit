@@ -24,5 +24,8 @@
     "build-artifacts": "rimraf ./artifacts && truffle compile && node ./split-artifacts.js",
     "test": "TS_NODE_FILES=1 truffle test",
     "prepack": "yarn build-artifacts"
+  },
+  "devDependencies": {
+    "ethlint": "^1.2.2"
   }
 }

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.25;
 
-import "./ownable.sol";
+import "./ownership/ownable.sol";
 import "./registry.sol";
 
 contract Endorsements is Ownable {
@@ -61,5 +61,10 @@ contract Endorsements is Ownable {
 
   function calculateServiceFee(uint256 totalAmount) public view returns(uint256 serviceFee) {
     return totalAmount * serviceFeeRatioAsWei / (1 ether);
+  }
+
+  // Make the contract killable
+  function kill() onlyOwner {
+    selfdestruct(msg.sender);
   }
 }

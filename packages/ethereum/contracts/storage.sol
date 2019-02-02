@@ -1,8 +1,8 @@
-pragma solidity ^0.4.22;
+pragma solidity ^0.4.25;
 
-import "./multi-ownable.sol";
+import "./ownership/multi-ownable.sol";
 
-contract Storage is MultiOwnable{
+contract Storage is MultiOwnable {
 
   struct Record {
     mapping(bytes32 => uint) uintMap;
@@ -18,7 +18,7 @@ contract Storage is MultiOwnable{
   bytes32[] public handleList;
   mapping(bytes32 => uint) public handleMap;
 
-  function addHandle(bytes32 handleToAdd) 
+  function addHandle(bytes32 handleToAdd)
     external
     onlyOwner
   {
@@ -60,7 +60,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].uintMap[key] = value;
   }
 
-  function getUint(bytes32 handle, bytes32 key) 
+  function getUint(bytes32 handle, bytes32 key)
     external
     view
     returns(uint value)
@@ -75,7 +75,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].stringMap[key] = value;
   }
 
-  function getString(bytes32 handle, bytes32 key) 
+  function getString(bytes32 handle, bytes32 key)
     external
     view
     returns(string value)
@@ -90,7 +90,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].addressMap[key] = value;
   }
 
-  function getAddress(bytes32 handle, bytes32 key) 
+  function getAddress(bytes32 handle, bytes32 key)
     external
     view
     returns(address value)
@@ -105,7 +105,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].intMap[key] = value;
   }
 
-  function getInt(bytes32 handle, bytes32 key) 
+  function getInt(bytes32 handle, bytes32 key)
     external
     view
     returns(int value)
@@ -120,7 +120,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].bytesMap[key] = value;
   }
 
-  function getBytes(bytes32 handle, bytes32 key) 
+  function getBytes(bytes32 handle, bytes32 key)
     external
     view
     returns(bytes value)
@@ -135,7 +135,7 @@ contract Storage is MultiOwnable{
     recordMap[handle].boolMap[key] = value;
   }
 
-  function getBool(bytes32 handle, bytes32 key) 
+  function getBool(bytes32 handle, bytes32 key)
     external
     view
     returns(bool value)
