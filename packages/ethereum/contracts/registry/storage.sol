@@ -1,8 +1,8 @@
 pragma solidity ^0.4.25;
 
-import "./ownership/multi-ownable.sol";
+import "../ownership/multi-ownable.sol";
 
-contract Storage is MultiOwnable {
+contract RegistryStorage is MultiOwnable {
 
   struct Record {
     mapping(bytes32 => uint) uintMap;

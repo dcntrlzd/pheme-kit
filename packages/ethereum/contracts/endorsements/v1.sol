@@ -1,12 +1,13 @@
 pragma solidity ^0.4.25;
 
 import "../ownership/ownable.sol";
+import "../registry/v0.sol";
+
 import "./storage.sol";
-import "../registry.sol";
 
 contract EndorsementsV1 is Ownable {
   EndorsementsStorage endorsementsStorage = EndorsementsStorage(0);
-  Registry registry = Registry(0);
+  RegistryV0 registry = RegistryV0(0);
 
   struct Endorsement {
     address endorser;
@@ -19,7 +20,7 @@ contract EndorsementsV1 is Ownable {
   event EndorsementRemoved(address indexed endorser, bytes32 indexed handle, bytes32 indexed hashedUuid);
 
   constructor(address endorsementsStorageAddress, address registryAddress) public {
-    registry = Registry(registryAddress);
+    registry = RegistryV0(registryAddress);
     endorsementsStorage = EndorsementsStorage(endorsementsStorageAddress);
   }
 
@@ -27,7 +28,7 @@ contract EndorsementsV1 is Ownable {
     external
     onlyOwner
   {
-    registry = Registry(registryAddress);
+    registry = RegistryV0(registryAddress);
   }
 
   function storagePrimaryKeyFor(bytes32 handle, string uuid) private pure returns (bytes32 primaryKey) {

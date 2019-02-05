@@ -1,17 +1,17 @@
 pragma solidity ^0.4.25;
 
-import "./ownership/ownable.sol";
+import "../ownership/ownable.sol";
 import "./storage.sol";
 
-contract Registry is Ownable {
-  Storage handleStorage = Storage(0);
+contract RegistryV0 is Ownable {
+  RegistryStorage handleStorage = RegistryStorage(0);
 
   event RecordUpdated(bytes32 indexed handle, string key);
   event RecordAdded(bytes32 indexed handle);
   event RecordRemoved(bytes32 indexed handle);
 
   constructor(address handleStorageAddress) public {
-    handleStorage = Storage(handleStorageAddress);
+    handleStorage = RegistryStorage(handleStorageAddress);
   }
 
   modifier guardByHandle(bytes32 handle) {

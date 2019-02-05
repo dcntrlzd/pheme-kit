@@ -1,4 +1,4 @@
-var Registry = artifacts.require('Registry');
+var Registry = artifacts.require('RegistryV0');
 var Endorsements = artifacts.require('EndorsementsV1');
 var Storage = artifacts.require('EndorsementsStorage');
 

@@ -1,6 +1,6 @@
 import * as ethers from 'ethers';
 import { modifyTask, createTask, IRegistry, ITask } from '../index';
-import RegistryAbi from '@pheme-kit/ethereum/artifacts/Registry.abi.json';
+import RegistryAbi from '@pheme-kit/ethereum/artifacts/RegistryV0.abi.json';
 
 type Contract = any;
 type ContractMethodCall = any;

@@ -1,14 +1,14 @@
 import assert = require('assert');
 import utils = require('web3-utils');
 
-import { assertTxEvent, assertRejection } from './utils';
+import { assertTxEvent, assertRejection } from '../utils';
 
-const RegistryContract = artifacts.require('Registry');
+const RegistryContract = artifacts.require('RegistryV0');
 
 const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
 const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';
 
-contract('Registry', (accounts) => {
+contract('Registry v0', (accounts) => {
   let registry;
   let owner;
   let otherUser;

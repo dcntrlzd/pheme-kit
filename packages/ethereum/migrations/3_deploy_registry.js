@@ -1,5 +1,5 @@
-var Storage = artifacts.require('./Storage.sol');
-var Registry = artifacts.require('./Registry.sol');
+var Storage = artifacts.require('RegistryStorage');
+var Registry = artifacts.require('RegistryV0');
 
 module.exports = async (deployer) => {
   let storage;

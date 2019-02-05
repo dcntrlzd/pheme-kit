@@ -3,10 +3,10 @@ import utils = require('web3-utils');
 
 import { assertTxEvent, assertRejection } from '../utils';
 
-const RegistryContract = artifacts.require('Registry');
+const RegistryContract = artifacts.require('RegistryV0');
 const EndorsementsContract = artifacts.require('EndorsementsV1');
 
-contract('Endorsements', (accounts) => {
+contract('Endorsements v1', (accounts) => {
   let registry;
   let endorsements;
   let endorsee;

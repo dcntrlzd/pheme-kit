@@ -5,9 +5,10 @@ import Pheme from '@pheme-kit/core/src';
 import PhemeRegistry from '@pheme-kit/core/src/registry';
 import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 
-import assert = require('assert');
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
+
+import assert = require('assert');
 
 const assertTxEvent = (tx, event, args) => {
   const log = tx.logs.find((cursor) => cursor.event === event);
@@ -18,7 +19,7 @@ const HANDLE = 'test';
 const PROFILE = { description: 'HELLO' };
 
 contract('E2E Test', (accounts) => {
-  const Registry: any = artifacts.require('Registry');
+  const Registry: any = artifacts.require('RegistryV0');
   let registry: any;
 
   let owner: string;

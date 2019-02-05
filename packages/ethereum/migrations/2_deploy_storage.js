@@ -1,4 +1,4 @@
-var Storage = artifacts.require('./Storage.sol');
+var Storage = artifacts.require('RegistryStorage');
 
 module.exports = function(deployer) {
   deployer.deploy(Storage);
