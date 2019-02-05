@@ -5,7 +5,7 @@ import { assertTxEvent, assertRejection } from '../utils';
 
 const StorageContract = artifacts.require('EndorsementsStorage');
 
-contract('EndorsementsStorage', (accounts) => {
+contract('Endorsements Storage', (accounts) => {
   let storage;
 
   const primaryKey = utils.fromUtf8('primary');
