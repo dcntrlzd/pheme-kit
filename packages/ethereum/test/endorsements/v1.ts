@@ -73,4 +73,11 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(finalRecipientBalance - initialRecipientBalance, transferAmount);
     assert.equal(finalContractBalance, 0);
   });
+
+  it('can revoke the endorsement', async() => {
+    const initialEndorsementCount = await endorsements.getEndorsementCount(handle, uuid);
+    await endorsements.revokeEndorsement(handle, uuid, { from: endorser });
+    const finalEndorsementCount = await endorsements.getEndorsementCount(handle, uuid);
+    assert.equal(initialEndorsementCount - finalEndorsementCount, 1);
+  });
 });

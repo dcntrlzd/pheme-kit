@@ -15,7 +15,7 @@ contract RegistryV0 is Ownable {
   }
 
   modifier guardByHandle(bytes32 handle) {
-    require(handleStorage.getAddress(handle, keccak256("owner")) == msg.sender);
+    require(handleStorage.getAddress(handle, keccak256("owner")) == msg.sender, "Unauthorized Access");
     _;
   }
 
@@ -64,8 +64,8 @@ contract RegistryV0 is Ownable {
   {
     address owner = msg.sender;
 
-    require(!isHandleRegistered(handle));
-    require(!isOwnerRegistered(owner));
+    require(!isHandleRegistered(handle), "Handle unavailable");
+    require(!isOwnerRegistered(owner), "You already have a handle");
 
     handleStorage.addHandle(handle);
     handleStorage.setAddress(handle, keccak256("owner"), owner);
@@ -88,13 +88,13 @@ contract RegistryV0 is Ownable {
     view
     returns(string pointer)
   {
-    require(isHandleRegistered(handle));
+    require(isHandleRegistered(handle), "Handle does not exist");
     return handleStorage.getString(handle, keccak256("pointer"));
   }
 
   function setHandlePointer(bytes32 handle, string pointer)
-    guardByHandle(handle)
     external
+    guardByHandle(handle)
   {
     handleStorage.setString(handle, keccak256("pointer"), pointer);
 
@@ -106,13 +106,13 @@ contract RegistryV0 is Ownable {
     view
     returns(string profile)
   {
-    require(isHandleRegistered(handle));
+    require(isHandleRegistered(handle), "Handle does not exist");
     return handleStorage.getString(handle, keccak256("profile"));
   }
 
   function setHandleProfile(bytes32 handle, string profile)
-    guardByHandle(handle)
     external
+    guardByHandle(handle)
   {
     handleStorage.setString(handle, keccak256("profile"), profile);
 
@@ -124,7 +124,7 @@ contract RegistryV0 is Ownable {
     view
     returns(address value)
   {
-    require(isHandleRegistered(handle));
+    require(isHandleRegistered(handle), "Handle does not exist");
     return handleStorage.getAddress(handle, keccak256("owner"));
   }
 
@@ -153,7 +153,7 @@ contract RegistryV0 is Ownable {
   }
 
   // Make the contract killable
-  function kill() onlyOwner public {
+  function kill() public onlyOwner {
     selfdestruct(msg.sender);
   }
 }

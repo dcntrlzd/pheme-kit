@@ -20,7 +20,7 @@ contract MultiOwnable {
    * @dev Throws if called by any account other than the owner.
    */
   modifier onlyOwner() {
-    require(owners[msg.sender]);
+    require(owners[msg.sender], "Unauthorized Access");
     _;
   }
 
@@ -29,7 +29,7 @@ contract MultiOwnable {
    * @param owner The address to add to the owners group.
    */
   function addOwner(address owner) public onlyOwner {
-    require(owner != address(0));
+    require(owner != address(0), "Invalid address");
 
     owners[owner] = true;
   }
@@ -39,8 +39,8 @@ contract MultiOwnable {
    * @param owner The address to remove from the owners group.
    */
   function removeOwner(address owner) public onlyOwner {
-    require(owner != address(0));
-    require(owner != msg.sender);
+    require(owner != address(0), "Invalid address");
+    require(owner != msg.sender, "You can not remove yourself");
 
     owners[owner] = false;
   }

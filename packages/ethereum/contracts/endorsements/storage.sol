@@ -57,7 +57,7 @@ contract EndorsementsStorage is MultiOwnable {
   }
 
   function getRecord(bytes32 primaryKey, uint index)
-    internal
+    private
     view
     returns(Record storage record)
   {
