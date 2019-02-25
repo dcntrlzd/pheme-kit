@@ -20,6 +20,7 @@ contract('Endorsements v1', (accounts) => {
   let recipient;
   let anotherEndorser;
   let owner;
+  let endorsementId;
 
   const handle = utils.fromUtf8('endorsements-test');
   const uuid = 'eb9d203a-566b-4940-bb45-25ec0d98a94d';
@@ -35,6 +36,7 @@ contract('Endorsements v1', (accounts) => {
     [owner, endorsee, endorser, recipient, anotherEndorser] = accounts;
     registry = await RegistryContract.deployed();
     endorsements = await EndorsementsContract.deployed();
+    endorsementId = await endorsements.getEndorsementId(handle, uuid, endorser);
 
     await registry.registerHandle(handle, { from: endorsee });
   });
@@ -78,10 +80,10 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(compareCount(finalCount, initialCount).byHandle, 1);
     assert.equal(compareCount(finalCount, initialCount).byContent, 1);
 
-    const endorsementEndorser = await endorsements.getEndorsementEndorser(handle, uuid, 0);
+    const endorsementEndorser = await endorsements.getEndorsementEndorser(endorsementId);
     assert.deepEqual(endorsementEndorser, endorser);
 
-    const endorsementAmount = await endorsements.getEndorsementAmount(handle, uuid, 0);
+    const endorsementAmount = await endorsements.getEndorsementAmount(endorsementId);
     assert.deepEqual(endorsementAmount.toString(), totalAmount);
   });
 
@@ -139,6 +141,25 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(finalContentCount - initialContentCount, 1);
     assert.equal(finalAnotherContentCount - initialAnotherContentCount, 1);
   });
+
+  it('can tip more', async () => {
+    const initialCount = await endorsements.getEndorsementCountByContent(handle, uuid);
+    const initialAmount = await endorsements.getEndorsementAmount(endorsementId);
+
+    const tx = await endorsements.endorse(handle, uuid, { from: endorser, value: totalAmount });
+
+    const finalCount = await endorsements.getEndorsementCountByContent(handle, uuid);
+    const finalAmount = await endorsements.getEndorsementAmount(endorsementId);
+
+    assert.equal(finalCount.toString(), initialCount.toString());
+    assert.equal(finalAmount - initialAmount, totalAmount);
+  });
+
+  it('can loop over endorsements by handle');
+
+  it('can loop over endorsements by content');
+
+  it('can loop over endorsements by endorser');
 
   it('can revoke the endorsement', async () => {
     const initialCount = await count(handle, uuid, endorser);

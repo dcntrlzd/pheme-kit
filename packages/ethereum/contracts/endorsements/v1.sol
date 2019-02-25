@@ -31,31 +31,92 @@ contract EndorsementsV1 is Ownable {
     registry = RegistryV0(registryAddress);
   }
 
-  function getEndorsementCountByContent(bytes32 handle, string uuid) public view returns (uint endorsementCount) {
+  function getEndorsementCountByContent(bytes32 handle, string uuid)
+    public
+    view
+    returns (uint endorsementCount)
+  {
     return endorsementsStorage.getRecordCountByContent(handle, uuid);
   }
 
-  function getEndorsementCountByEndorser(address endorser) public view returns (uint endorsementCount) {
+  function getEndorsementCountByEndorser(address endorser)
+    public
+    view
+    returns (uint endorsementCount)
+  {
     return endorsementsStorage.getRecordCountByEndorser(endorser);
   }
 
-  function getEndorsementCountByHandle(bytes32 handle) public view returns (uint endorsementCount) {
+  function getEndorsementCountByHandle(bytes32 handle)
+    public
+    view
+    returns (uint endorsementCount)
+  {
     return endorsementsStorage.getRecordCountByHandle(handle);
   }
 
-  function getEndorsementEndorser(bytes32 handle, string uuid, uint index) public view returns (address endorser) {
-    bytes32 recordId = endorsementsStorage.getRecordIdByContentAt(handle, uuid, index);
+  function getEndorsementEndorser(bytes32 recordId)
+    public
+    view
+    returns (address endorser)
+  {
     return endorsementsStorage.getEndorser(recordId);
   }
 
-  function getEndorsementAmount(bytes32 handle, string uuid, uint index) public view returns (uint amount) {
-    bytes32 recordId = endorsementsStorage.getRecordIdByContentAt(handle, uuid, index);
+  function getEndorsementHandle(bytes32 recordId)
+    public
+    view
+    returns (bytes32 handle)
+  {
+    return endorsementsStorage.getHandle(recordId);
+  }
+
+  function getEndorsementUuid(bytes32 recordId)
+    public
+    view
+    returns (string uuid)
+  {
+    return endorsementsStorage.getUuid(recordId);
+  }
+
+  function getEndorsementAmount(bytes32 recordId)
+    public
+    view
+    returns (uint recordAmount)
+  {
     return endorsementsStorage.getUint(recordId, keccak256("amount"));
   }
 
-  function checkEndorsement(bytes32 handle, string uuid, address endorser) private view returns (bool didEndorse) {
-    bytes32 recordId = endorsementsStorage.calculateId(handle, uuid, endorser);
-    return endorsementsStorage.getEndorser(recordId) == endorser;
+  function getRecordIdByHandleAt(bytes32 handle, uint index)
+    public
+    view
+    returns (bytes32 endorsementId)
+  {
+    return endorsementsStorage.getRecordIdByHandleAt(handle, index);
+  }
+
+  function getRecordIdByContentAt(bytes32 handle, string uuid, uint index)
+    public
+    view
+    returns (bytes32 endorsementId)
+  {
+    return endorsementsStorage.getRecordIdByContentAt(handle, uuid, index);
+  }
+
+  function getRecordIdByEndorserAt(address endorser, uint index)
+    public
+    view
+    returns (bytes32 endorsementId)
+  {
+    return endorsementsStorage.getRecordIdByEndorserAt(endorser, index);
+  }
+
+  function getEndorsementId(bytes32 handle, string uuid, address endorser)
+    public
+    view
+    returns (bytes32 endorsementId)
+  {
+    return endorsementsStorage.calculateId(handle, uuid, endorser);
   }
 
   function endorse(bytes32 handle, string uuid) external payable {
@@ -63,17 +124,22 @@ contract EndorsementsV1 is Ownable {
     require(endorsee != address(0), "Could not find the handle in the registry");
 
     address endorser = msg.sender;
-    // TODO: figure if multiple endorsements are possible
-    require(!checkEndorsement(handle, uuid, endorser), "You have already endorsed this content.");
 
     uint amount = msg.value;
     uint serviceFee = calculateServiceFee(amount);
     uint endorseeShare = amount - serviceFee;
 
-    endorsementsStorage.addRecord(handle, uuid, endorser);
-    bytes32 recordId = endorsementsStorage.calculateId(handle, uuid, endorser);
+    bytes32 endorsementId = getEndorsementId(handle, uuid, endorser);
 
-    endorsementsStorage.setUint(recordId, keccak256("amount"), amount);
+    if (endorsementsStorage.getEndorser(endorsementId) != endorser) {
+      // endorsement does not exist so we create a new one
+      endorsementsStorage.addRecord(handle, uuid, endorser);
+      endorsementsStorage.setUint(endorsementId, keccak256("amount"), amount);
+    } else {
+      // endorsement already exist so we modify the old one
+      uint previousAmount = endorsementsStorage.getUint(endorsementId, keccak256("amount"));
+      endorsementsStorage.setUint(endorsementId, keccak256("amount"), previousAmount + amount);
+    }
 
     endorsee.transfer(endorseeShare);
     emit EndorsementAdded(endorser, handle, keccak256(abi.encodePacked(uuid)));
