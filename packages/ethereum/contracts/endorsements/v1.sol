@@ -31,31 +31,31 @@ contract EndorsementsV1 is Ownable {
     registry = RegistryV0(registryAddress);
   }
 
-  function storagePrimaryKeyFor(bytes32 handle, string uuid) private pure returns (bytes32 primaryKey) {
-    return keccak256(abi.encodePacked(handle, uuid));
+  function getEndorsementCountByContent(bytes32 handle, string uuid) public view returns (uint endorsementCount) {
+    return endorsementsStorage.getRecordCountByContent(handle, uuid);
   }
 
-  function getEndorsementCount(bytes32 handle, string uuid) public view returns (uint endorsementCount) {
-    return endorsementsStorage.getRecordCountFor(storagePrimaryKeyFor(handle, uuid));
+  function getEndorsementCountByEndorser(address endorser) public view returns (uint endorsementCount) {
+    return endorsementsStorage.getRecordCountByEndorser(endorser);
+  }
+
+  function getEndorsementCountByHandle(bytes32 handle) public view returns (uint endorsementCount) {
+    return endorsementsStorage.getRecordCountByHandle(handle);
   }
 
   function getEndorsementEndorser(bytes32 handle, string uuid, uint index) public view returns (address endorser) {
-    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
-    return endorsementsStorage.getAddress(primaryKey, index, keccak256("endorser"));
+    bytes32 recordId = endorsementsStorage.getRecordIdByContentAt(handle, uuid, index);
+    return endorsementsStorage.getEndorser(recordId);
   }
 
   function getEndorsementAmount(bytes32 handle, string uuid, uint index) public view returns (uint amount) {
-    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
-    return endorsementsStorage.getUint(primaryKey, index, keccak256("amount"));
+    bytes32 recordId = endorsementsStorage.getRecordIdByContentAt(handle, uuid, index);
+    return endorsementsStorage.getUint(recordId, keccak256("amount"));
   }
 
-  function checkEndorsement(bytes32 primaryKey, bytes32 secondaryKey, address endorser) private view returns (bool didEndorse) {
-    if (endorsementsStorage.getRecordCountFor(primaryKey) == 0) {
-      return false;
-    } else {
-      uint index = endorsementsStorage.getSecondaryKeyIndex(primaryKey, secondaryKey);
-      return endorsementsStorage.getAddress(primaryKey, index, keccak256("endorser")) == endorser;
-    }
+  function checkEndorsement(bytes32 handle, string uuid, address endorser) private view returns (bool didEndorse) {
+    bytes32 recordId = endorsementsStorage.calculateId(handle, uuid, endorser);
+    return endorsementsStorage.getEndorser(recordId) == endorser;
   }
 
   function endorse(bytes32 handle, string uuid) external payable {
@@ -63,20 +63,17 @@ contract EndorsementsV1 is Ownable {
     require(endorsee != address(0), "Could not find the handle in the registry");
 
     address endorser = msg.sender;
-    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
-    bytes32 secondaryKey = keccak256(abi.encodePacked(endorser));
     // TODO: figure if multiple endorsements are possible
-    require(!checkEndorsement(primaryKey, secondaryKey, endorser), "You have already endorsed this content.");
+    require(!checkEndorsement(handle, uuid, endorser), "You have already endorsed this content.");
 
     uint amount = msg.value;
     uint serviceFee = calculateServiceFee(amount);
     uint endorseeShare = amount - serviceFee;
 
-    endorsementsStorage.addRecord(primaryKey, secondaryKey);
-    uint index = endorsementsStorage.getSecondaryKeyIndex(primaryKey, secondaryKey);
+    endorsementsStorage.addRecord(handle, uuid, endorser);
+    bytes32 recordId = endorsementsStorage.calculateId(handle, uuid, endorser);
 
-    endorsementsStorage.setAddress(primaryKey, index, keccak256("endorser"), endorser);
-    endorsementsStorage.setUint(primaryKey, index, keccak256("amount"), amount);
+    endorsementsStorage.setUint(recordId, keccak256("amount"), amount);
 
     endorsee.transfer(endorseeShare);
     emit EndorsementAdded(endorser, handle, keccak256(abi.encodePacked(uuid)));
@@ -88,10 +85,7 @@ contract EndorsementsV1 is Ownable {
 
     require(endorsee != address(0), "Could not find the handle in the registry");
 
-    bytes32 primaryKey = storagePrimaryKeyFor(handle, uuid);
-    bytes32 secondaryKey = keccak256(abi.encodePacked(endorser));
-
-    endorsementsStorage.removeRecord(primaryKey, secondaryKey);
+    endorsementsStorage.removeRecord(handle, uuid, endorser);
   }
 
   function calculateServiceFee(uint256 totalAmount) public view returns(uint256 serviceFee) {
