@@ -51,6 +51,30 @@ contract('Endorsements v1', (accounts) => {
     return { byEndorser, byHandle, byContent };
   };
 
+  const loopRecordsBy = async (countMethod: string, fetchMethod: string, ...params: any[]) => {
+    const endorsementCount = await endorsements[countMethod](...params);
+    const list = [];
+
+    for (let i = 0; i < endorsementCount; i += 1) {
+      const id = await endorsements[fetchMethod](...[...params, i]);
+      const [recordEndorser, recordHandle, recordUuid, recordAmount] = await Promise.all([
+        endorsements.getEndorsementEndorser(id),
+        endorsements.getEndorsementHandle(id),
+        endorsements.getEndorsementUuid(id),
+        endorsements.getEndorsementAmount(id),
+      ]);
+
+      list.push({
+        endorser: recordEndorser,
+        handle: recordHandle.replace(/0+$/, ''),
+        uuid: recordUuid,
+        amount: recordAmount.toString(),
+      });
+    }
+
+    return list;
+  };
+
   it('can endorse a content', async () => {
     const initialEndorseeBalance = await web3.eth.getBalance(endorsee);
     const initialContractBalance = await web3.eth.getBalance(endorsements.address);
@@ -70,9 +94,9 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(finalEndorseeBalance - initialEndorseeBalance, endorseeShare);
     assert.equal(finalContractBalance - initialContractBalance, serviceFee);
 
-    assert.equal(finalCount.byEndorser, initialCount.byEndorser, 1);
-    assert.equal(finalCount.byEndorser, initialCount.byEndorser, 1);
-    assert.equal(finalCount.byEndorser, initialCount.byEndorser, 1);
+    assert.equal(finalCount.byEndorser - initialCount.byEndorser, 1);
+    assert.equal(finalCount.byHandle - initialCount.byHandle, 1);
+    assert.equal(finalCount.byContent - initialCount.byContent, 1);
 
     const endorsementEndorser = await endorsements.getEndorsementEndorser(endorsementId);
     assert.deepEqual(endorsementEndorser, endorser);
@@ -148,30 +172,6 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(finalCount.toString(), initialCount.toString());
     assert.equal(finalAmount - initialAmount, totalAmount);
   });
-
-  const loopRecordsBy = async (countMethod: string, fetchMethod: string, ...params: any[]) => {
-    const endorsementCount = await endorsements[countMethod](...params);
-    const list = [];
-
-    for (let i = 0; i < endorsementCount; i += 1) {
-      const id = await endorsements[fetchMethod](...[...params, i]);
-      const [recordEndorser, recordHandle, recordUuid, recordAmount] = await Promise.all([
-        endorsements.getEndorsementEndorser(id),
-        endorsements.getEndorsementHandle(id),
-        endorsements.getEndorsementUuid(id),
-        endorsements.getEndorsementAmount(id),
-      ]);
-
-      list.push({
-        endorser: recordEndorser,
-        handle: recordHandle.replace(/0+$/, ''),
-        uuid: recordUuid,
-        amount: recordAmount.toString(),
-      });
-    }
-
-    return list;
-  };
 
   it('can loop over endorsements by handle', async () => {
     const records = await loopRecordsBy(
@@ -251,8 +251,8 @@ contract('Endorsements v1', (accounts) => {
     await endorsements.revokeEndorsement(handle, uuid, { from: endorser });
     const finalCount = await count(handle, uuid, endorser);
 
-    assert.equal(initialCount.byEndorser, finalCount.byEndorser, 1);
-    assert.equal(initialCount.byHandle, finalCount.byHandle, 1);
-    assert.equal(initialCount.byContent, finalCount.byContent, 1);
+    assert.equal(initialCount.byEndorser - finalCount.byEndorser, 1);
+    assert.equal(initialCount.byHandle - finalCount.byHandle, 1);
+    assert.equal(initialCount.byContent - finalCount.byContent, 1);
   });
 });
