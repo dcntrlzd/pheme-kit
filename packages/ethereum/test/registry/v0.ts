@@ -3,7 +3,7 @@ import utils = require('web3-utils');
 
 import { assertTxEvent, assertRejection } from '../utils';
 
-const RegistryContract = artifacts.require('RegistryV0');
+const RegistryContract = artifacts.require('RegistryV1');
 
 const BASE_MULTIHASH = 'QmfQ5QAjvg4GtA3wg3adpnDJug8ktA1BxurVqBD8rtgVjM';
 const NEW_MULTIHASH = 'QmYtUc4iTCbbfVSDNKvtQqrfyezPPnFvE33wFmutw9PBBk';

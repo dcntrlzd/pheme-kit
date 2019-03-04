@@ -1,5 +1,1 @@
-const base = require('../packages/ethereum/truffle');
-
-module.exports = {
-  ...base,
-};
+module.exports = require('../packages/ethereum/truffle');

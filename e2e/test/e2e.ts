@@ -19,7 +19,7 @@ const HANDLE = 'test';
 const PROFILE = { description: 'HELLO' };
 
 contract('E2E Test', (accounts) => {
-  const Registry: any = artifacts.require('RegistryV0');
+  const Registry: any = artifacts.require('RegistryV1');
   let registry: any;
 
   let owner: string;

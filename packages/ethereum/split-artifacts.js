@@ -4,12 +4,17 @@ const fs = require('fs');
 
 const artifactsDirectory = path.resolve(__dirname, './artifacts');
 fs.mkdirSync(artifactsDirectory, { recursive: true });
+fs.mkdirSync(path.join(artifactsDirectory, 'abi'));
+fs.mkdirSync(path.join(artifactsDirectory, 'bytecode'));
 
 glob(path.join(artifactsDirectory, 'full', '*.json'), (err, files) => {
   files.forEach((file) => {
     const { contractName, abi, bytecode } = require(file);
-    const baseName = path.join(artifactsDirectory, contractName);
-    fs.writeFileSync(`${baseName}.abi.json`, JSON.stringify(abi));
-    fs.writeFileSync(`${baseName}.bytecode.json`, JSON.stringify(bytecode));
+
+    const abiPath = path.join(artifactsDirectory, 'abi', contractName);
+    const bytecodePath = path.join(artifactsDirectory, 'bytecode', contractName);
+
+    fs.writeFileSync(`${abiPath}.json`, JSON.stringify(abi));
+    fs.writeFileSync(`${bytecodePath}.json`, JSON.stringify(bytecode));
   });
 });
