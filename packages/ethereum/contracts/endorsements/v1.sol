@@ -87,6 +87,14 @@ contract EndorsementsV1 is Ownable {
     return endorsementsStorage.getUint(recordId, keccak256("amount"));
   }
 
+  function getEndorsementCreatedAt(bytes32 recordId)
+    public
+    view
+    returns (uint createdAt)
+  {
+    return endorsementsStorage.getUint(recordId, keccak256("createdAt"));
+  }
+
   function getRecordIdByHandleAt(bytes32 handle, uint index)
     public
     view
@@ -135,6 +143,7 @@ contract EndorsementsV1 is Ownable {
       // endorsement does not exist so we create a new one
       endorsementsStorage.addRecord(handle, uuid, endorser);
       endorsementsStorage.setUint(endorsementId, keccak256("amount"), amount);
+      endorsementsStorage.setUint(endorsementId, keccak256("createdAt"), block.timestamp);
     } else {
       // endorsement already exist so we modify the old one
       uint previousAmount = endorsementsStorage.getUint(endorsementId, keccak256("amount"));

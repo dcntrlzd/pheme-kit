@@ -103,6 +103,10 @@ contract('Endorsements v1', (accounts) => {
 
     const endorsementAmount = await endorsements.getEndorsementAmount(endorsementId);
     assert.deepEqual(endorsementAmount.toString(), totalAmount);
+
+    const txBlock = await web3.eth.getBlock(tx.receipt.blockNumber);
+    const endorsementCreatedAt = await endorsements.getEndorsementCreatedAt(endorsementId);
+    assert.equal(endorsementCreatedAt.toNumber(), txBlock.timestamp);
   });
 
   it('can transfer collected fees', async () => {
