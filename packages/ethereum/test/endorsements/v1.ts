@@ -259,4 +259,20 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(initialCount.byHandle - finalCount.byHandle, 1);
     assert.equal(initialCount.byContent - finalCount.byContent, 1);
   });
+
+  it('can not self endorse', async () => {
+    const initialCount = await count(handle, uuid, endorsee);
+
+    await assert.rejects(endorsements.endorse(handle, uuid, { from: endorsee }), {
+      name: 'Error',
+      message:
+        'Returned error: VM Exception while processing transaction: revert Can not self endorse -- Reason given: Can not self endorse.',
+    });
+
+    const finalCount = await count(handle, uuid, endorsee);
+
+    assert.equal(finalCount.byEndorser - initialCount.byEndorser, 0);
+    assert.equal(finalCount.byHandle - initialCount.byHandle, 0);
+    assert.equal(finalCount.byContent - initialCount.byContent, 0);
+  });
 });

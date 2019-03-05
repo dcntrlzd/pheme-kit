@@ -132,6 +132,7 @@ contract EndorsementsV1 is Ownable {
     require(endorsee != address(0), "Could not find the handle in the registry");
 
     address endorser = msg.sender;
+    require(endorser != endorsee, "Can not self endorse");
 
     uint amount = msg.value;
     uint serviceFee = calculateServiceFee(amount);
