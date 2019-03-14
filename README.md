@@ -30,13 +30,15 @@ Pheme feeds are consisted of small json objects living in the storage layer cont
 First of all you'll need to pick a registry to start working on a feed. You can start by using the public registry (it lives in `@pheme-kit/ethereum/registry.sol`). And then you can start using Pheme.
 
 ```js
-import Pheme from '@pheme-kit/core/lib';
+import Pheme from '@pheme-kit/core';
 import PhemeRegistry from '@pheme-kit/core/lib/registry';
 import PhemeStorageIpfs from '@pheme-kit/storage-ipfs';
 
-// You'll need an ethers.js contract to intialize the registry (more at https://docs.ethers.io/ethers.js/html/)
-const registry = new PhemeRegistry(contract);
+// Create a registry instance by using the contract address and an ethers.js provider or signer
+// Check https://docs.ethers.io/ethers.js/html/ to lear more at about ethers.js
+const registry = PhemeRegistry.attach(CONTRACT_ADDRESS, etherProvider.getSigner());
 
+// Create a Pheme instance with ipfs storage configured
 const pheme = new Pheme(registry, {
   ipfs: new PhemeStorageIpfs(IPFS_RPC_URL, IPFS_GATEWAY_URL),
 });
