@@ -1,6 +1,6 @@
 {
   "name": "@pheme-kit/core",
-  "version": "0.0.1-alpha.4",
+  "version": "0.0.1-alpha.5",
   "description": "Pheme Kit core library",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
   "homepage": "https://github.com/dcntrlzd/pheme-protocol",
@@ -27,7 +27,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@pheme-kit/ethereum": "^0.0.1-alpha.4",
+    "@pheme-kit/ethereum": "^0.0.1-alpha.5",
     "ethers": "^4.0.21",
     "uuid": "^3.3.2"
   }
