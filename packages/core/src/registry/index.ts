@@ -21,11 +21,7 @@ export default class PhemeRegistry implements IRegistry {
     return ethers.utils.parseBytes32String(input);
   }
 
-  private static weiToEther(wei: number): number {
-    return Number(ethers.utils.formatEther(wei));
-  }
-
-  public contract: ethers.ethers.Contract;
+  public contract: ethers.Contract;
 
   constructor(contract: ethers.Contract) {
     this.contract = contract;
@@ -84,23 +80,24 @@ export default class PhemeRegistry implements IRegistry {
   private buildGetterTask<T>(methodName: string, args: any[] = [], options: any = {}): ITask<T> {
     return createTask(
       {
-        estimate: () => Promise.resolve(0),
+        estimate: () => Promise.resolve(ethers.constants.Zero),
         execute: () => this.contract.functions[methodName](...args, options),
       },
       { txHash: '' }
     );
   }
 
+  // TODO: make it abstract to convert calls to commands/tasks
   private buildSetterTask(methodName: string, args: any[] = [], options: any = {}): ITask<void> {
     let estimateGasPromise;
     let gasPricePromise;
 
-    const getGasPrice = (): Promise<number> => {
+    const getGasPrice = (): Promise<ethers.utils.BigNumber> => {
       if (!gasPricePromise) gasPricePromise = this.contract.provider.getGasPrice();
       return gasPricePromise;
     };
 
-    const estimateGas = (): Promise<number> => {
+    const estimateGas = (): Promise<ethers.utils.BigNumber> => {
       if (!estimateGasPromise) {
         estimateGasPromise = this.contract.estimate[methodName](...args, options);
       }
@@ -111,7 +108,8 @@ export default class PhemeRegistry implements IRegistry {
       {
         estimate: (context) =>
           Promise.all([getGasPrice(), estimateGas()]).then(
-            ([gasPrice, gasCost]: [number, number]) => PhemeRegistry.weiToEther(gasPrice * gasCost)
+            ([gasPrice, gasCost]: [ethers.utils.BigNumber, ethers.utils.BigNumber]) =>
+              gasPrice.mul(gasCost)
           ),
         execute: (context) =>
           this.contract.functions[methodName](...args, options).then((tx) => {

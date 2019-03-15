@@ -1,11 +1,12 @@
 import { v4 as generateUuid } from 'uuid';
 import StorageProxy, { IStorageMap } from './storage-proxy';
+import * as ethers from 'ethers';
 export { StorageProxy };
 
 export interface ITask<T = void> {
   context: any;
   execute: (parentContext?: any) => Promise<T>;
-  estimate: (parentContext?: any) => Promise<number>;
+  estimate: (parentContext?: any) => Promise<ethers.utils.BigNumber>;
 }
 
 export interface IStorage {
@@ -52,7 +53,7 @@ type HandleModification = [string, IBlock];
 export function createTask<Y>(
   methods: {
     execute: (context: any) => Promise<Y>;
-    estimate: (context: any) => Promise<number>;
+    estimate: (context: any) => Promise<ethers.utils.BigNumber>;
   },
   context = {}
 ): ITask<Y> {

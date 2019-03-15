@@ -1,4 +1,5 @@
 import Pheme, { ITask, modifyTask, createTask } from './index';
+import * as ethers from 'ethers';
 
 import TestRegistry from './test/registry';
 import TestStorage from './test/storage';
@@ -8,7 +9,7 @@ describe('modifyTask', () => {
     const taskBuilder = (): ITask => {
       return createTask(
         {
-          estimate: async () => 0,
+          estimate: async () => ethers.constants.Zero,
           execute: (context) => {
             context.status = 'DONE';
             return Promise.resolve();
