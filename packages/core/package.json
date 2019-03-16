@@ -26,9 +26,14 @@
   "publishConfig": {
     "access": "public"
   },
+  "peerDependencies": {
+    "ethers": "^4.0.21"
+  },
+  "devDependencies": {
+    "ethers": "^4.0.21"
+  },
   "dependencies": {
     "@pheme-kit/ethereum": "^0.0.1-alpha.5",
-    "ethers": "^4.0.21",
     "uuid": "^3.3.2"
   }
 }
