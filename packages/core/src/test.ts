@@ -1,4 +1,5 @@
-import Pheme, { ITask, modifyTask, createTask } from './index';
+import Pheme from './index';
+import { ITask, modifyTask, createTask } from './task';
 import * as ethers from 'ethers';
 
 import TestRegistry from './test/registry';

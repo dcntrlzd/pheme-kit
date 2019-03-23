@@ -1,4 +1,5 @@
-import { IRegistry, ITask } from '../index';
+import { IRegistry } from '../index';
+import { ITask } from '../task';
 import { v4 as uuid } from 'uuid';
 
 const mockTask = (fn) =>

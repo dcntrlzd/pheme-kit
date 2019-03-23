@@ -27,10 +27,10 @@
     "access": "public"
   },
   "peerDependencies": {
-    "ethers": "^4.0.21"
+    "ethers": "^4.0.27"
   },
   "devDependencies": {
-    "ethers": "^4.0.21"
+    "ethers": "^4.0.27"
   },
   "dependencies": {
     "@pheme-kit/ethereum": "^0.0.1-alpha.6",

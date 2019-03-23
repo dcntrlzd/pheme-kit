@@ -3593,10 +3593,10 @@ ethereumjs-wallet@0.6.2:
     utf8 "^3.0.0"
     uuid "^3.3.2"
 
-ethers@^4.0.21:
-  version "4.0.21"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-4.0.21.tgz#b3d88fa5f5832383de515769841fe6ad8545a71a"
-  integrity sha512-wKW0tG15n91qtnt6e1YUXOeRRiHc03U6qenmLQbjiPLX9KVhNnBKe1kFpRtiiuPp0dyHsWWmtML9pz44pmAO1g==
+ethers@^4.0.27:
+  version "4.0.27"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-4.0.27.tgz#e570b0da9d805ad65c83d81919abe02b2264c6bf"
+  integrity sha512-+DXZLP/tyFnXWxqr2fXLT67KlGUfLuvDkHSOtSC9TUVG9OIj6yrG5JPeXRMYo15xkOYwnjgdMKrXp5V94rtjJA==
   dependencies:
     "@types/node" "^10.3.2"
     aes-js "3.0.0"
@@ -9970,10 +9970,10 @@ trim@0.0.1:
   resolved "https://registry.yarnpkg.com/trim/-/trim-0.0.1.tgz#5858547f6b290757ee95cccc666fb50084c460dd"
   integrity sha1-WFhUf2spB1fulczMZm+1AITEYN0=
 
-truffle@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.0.0.tgz#2e4e2eedc5583ae38c7227585e5177d6360fbc6d"
-  integrity sha512-la0TJu+E59Ut62i6cGY0sugeubglDqH5w49a7IrpxZ1nnsDqv6qWB3ibiyYiCp/jr+iI0bLtcr3DKkfQjVDd+g==
+truffle@^5.0.9:
+  version "5.0.9"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.0.9.tgz#e0e8c943aafd3ccd02634c15c27d306509a18055"
+  integrity sha512-Y+UZxpAugmnCeRBOBGr3SpHhZ9Avpsj9qM7gTNdl1RH7nImTmWBQkUk/IUSUllK+66TAL9EEp2IH7Ji4YFhzVQ==
   dependencies:
     app-module-path "^2.2.0"
     mocha "^4.1.0"

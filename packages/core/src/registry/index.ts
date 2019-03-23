@@ -1,9 +1,11 @@
 import * as ethers from 'ethers';
-import { modifyTask, createTask, IRegistry, ITask } from '../index';
+import { IRegistry } from '../index';
+import { modifyTask, createTaskFromContractMethod, ITask } from '../task';
 import RegistryAbi from '@pheme-kit/ethereum/artifacts/abi/RegistryV1.json';
 
-type Contract = any;
-type ContractMethodCall = any;
+const stringToBytes = (input: string) => ethers.utils.formatBytes32String(input);
+
+const bytesToString = (input: string) => ethers.utils.parseBytes32String(input);
 
 export default class PhemeRegistry implements IRegistry {
   public static attach(
@@ -13,13 +15,6 @@ export default class PhemeRegistry implements IRegistry {
     const contract = new ethers.Contract(address, RegistryAbi, providerOrSigner);
     return new PhemeRegistry(contract);
   }
-  private static stringToBytes(input: string): string {
-    return ethers.utils.formatBytes32String(input);
-  }
-
-  private static bytesToString(input: string): string {
-    return ethers.utils.parseBytes32String(input);
-  }
 
   public contract: ethers.Contract;
 
@@ -28,96 +23,54 @@ export default class PhemeRegistry implements IRegistry {
   }
 
   public register(handle: string): ITask {
-    return this.buildSetterTask('registerHandle', [PhemeRegistry.stringToBytes(handle)]);
+    return this.createTask('registerHandle', [stringToBytes(handle)]);
   }
 
   public getPointer(handle: string): ITask<string> {
-    return this.buildGetterTask('getHandlePointer', [PhemeRegistry.stringToBytes(handle)]);
+    return this.createTask('getHandlePointer', [stringToBytes(handle)]);
   }
 
   public setPointer(handle: string, value: string = ''): ITask {
-    return this.buildSetterTask('setHandlePointer', [PhemeRegistry.stringToBytes(handle), value]);
+    return this.createTask('setHandlePointer', [stringToBytes(handle), value]);
   }
 
   public getProfile(handle: string): ITask<string> {
-    return this.buildGetterTask('getHandleProfile', [PhemeRegistry.stringToBytes(handle)]);
+    return this.createTask('getHandleProfile', [stringToBytes(handle)]);
   }
 
   public setProfile(handle: string, value: string = ''): ITask {
-    return this.buildSetterTask('setHandleProfile', [PhemeRegistry.stringToBytes(handle), value]);
+    return this.createTask('setHandleProfile', [stringToBytes(handle), value]);
   }
 
   public getOwner(handle: string): ITask<string> {
-    return this.buildGetterTask('getHandleOwner', [PhemeRegistry.stringToBytes(handle)]);
+    return this.createTask('getHandleOwner', [stringToBytes(handle)]);
   }
 
   public setOwner(handle: string, value: string = ''): ITask {
-    return this.buildSetterTask('setHandleOwner', [PhemeRegistry.stringToBytes(handle), value]);
+    return this.createTask('setHandleOwner', [stringToBytes(handle), value]);
   }
 
   public getHandleAt(index: number): ITask<string> {
-    const task = this.buildGetterTask('getHandleAt', [index]);
+    const task = this.createTask('getHandleAt', [index]);
 
     return modifyTask(task, {
-      execute: () =>
-        task.execute().then((handleAsBytes: string) => PhemeRegistry.bytesToString(handleAsBytes)),
+      execute: () => task.execute().then((handleAsBytes: string) => bytesToString(handleAsBytes)),
     });
   }
 
   public getHandleCount(): ITask<number> {
-    return this.buildGetterTask('getHandleCount');
+    return this.createTask('getHandleCount');
   }
 
   public getHandleByOwner(owner: string): ITask<string> {
-    const task = this.buildGetterTask('getHandleByOwner', [owner]);
+    const task = this.createTask('getHandleByOwner', [owner]);
 
     return modifyTask(task, {
-      execute: () =>
-        task.execute().then((handleAsBytes: string) => PhemeRegistry.bytesToString(handleAsBytes)),
+      execute: () => task.execute().then((handleAsBytes: string) => bytesToString(handleAsBytes)),
     });
   }
 
-  private buildGetterTask<T>(methodName: string, args: any[] = [], options: any = {}): ITask<T> {
-    return createTask(
-      {
-        estimate: () => Promise.resolve(ethers.constants.Zero),
-        execute: () => this.contract.functions[methodName](...args, options),
-      },
-      { txHash: '' }
-    );
-  }
-
-  // TODO: make it abstract to convert calls to commands/tasks
-  private buildSetterTask(methodName: string, args: any[] = [], options: any = {}): ITask<void> {
-    let estimateGasPromise;
-    let gasPricePromise;
-
-    const getGasPrice = (): Promise<ethers.utils.BigNumber> => {
-      if (!gasPricePromise) gasPricePromise = this.contract.provider.getGasPrice();
-      return gasPricePromise;
-    };
-
-    const estimateGas = (): Promise<ethers.utils.BigNumber> => {
-      if (!estimateGasPromise) {
-        estimateGasPromise = this.contract.estimate[methodName](...args, options);
-      }
-      return estimateGasPromise;
-    };
-
-    return createTask(
-      {
-        estimate: (context) =>
-          Promise.all([getGasPrice(), estimateGas()]).then(
-            ([gasPrice, gasCost]: [ethers.utils.BigNumber, ethers.utils.BigNumber]) =>
-              gasPrice.mul(gasCost)
-          ),
-        execute: (context) =>
-          this.contract.functions[methodName](...args, options).then((tx) => {
-            context.txHash = tx.hash;
-            return;
-          }),
-      },
-      { txHash: '' }
-    );
+  private createTask(methodName: string, args: any[] = [], options: any = {}): ITask<any> {
+    return createTaskFromContractMethod(this.contract, methodName, args, options);
   }
 }

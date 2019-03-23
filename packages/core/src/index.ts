@@ -1,13 +1,7 @@
 import { v4 as generateUuid } from 'uuid';
 import StorageProxy, { IStorageMap } from './storage-proxy';
+import { ITask, createTask, modifyTask } from './task';
 import * as ethers from 'ethers';
-export { StorageProxy };
-
-export interface ITask<T = void> {
-  context: any;
-  execute: (parentContext?: any) => Promise<T>;
-  estimate: (parentContext?: any) => Promise<ethers.utils.BigNumber>;
-}
 
 export interface IStorage {
   publicUrlFor: (address: string) => string;
@@ -49,36 +43,6 @@ export interface IBlock {
 
 type HandleState = [string, IBlock[]];
 type HandleModification = [string, IBlock];
-
-export function createTask<Y>(
-  methods: {
-    execute: (context: any) => Promise<Y>;
-    estimate: (context: any) => Promise<ethers.utils.BigNumber>;
-  },
-  context = {}
-): ITask<Y> {
-  return {
-    context,
-    execute: (parentContext: any = {}) => {
-      return methods.execute(context).then((result) => {
-        Object.assign(parentContext, context);
-        return result;
-      });
-    },
-    estimate: (parentContext: any = {}) => {
-      return methods.estimate(context).then((result) => {
-        Object.assign(parentContext, context);
-        return result;
-      });
-    },
-  };
-}
-
-export function modifyTask<Z, Y>(task: Z, modifications: Y): Z & Y {
-  return new Proxy(task as any, {
-    get: (context, prop) => modifications[prop] || context[prop],
-  }) as Z & Y;
-}
 
 export default class Pheme<Registry extends IRegistry> {
   public readonly registry: Registry;
