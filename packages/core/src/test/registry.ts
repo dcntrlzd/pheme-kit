@@ -1,20 +1,21 @@
 import { IRegistry } from '../index';
-import { ITask } from '../task';
+import { ITask, createTask } from '../task';
 import { v4 as uuid } from 'uuid';
+import * as ethers from 'ethers';
 
-const mockTask = (fn) =>
-  jest.fn((...args) => ({
-    execute: jest.fn(() => fn(...args)),
-  }));
+const mockTask = <T, M>(fn: (...fnArgs: any) => Promise<T>) => (...args: any) =>
+  createTask<T>({ execute: () => fn(...args) });
 
 export default class PhemeTestRegistry implements IRegistry {
   public records: { [handle: string]: any } = {};
 
-  public register = mockTask((handle: string) => {
-    if (this.records[handle]) throw new Error('Handle already exists');
-    this.records[handle] = {};
-    return Promise.resolve();
-  });
+  public register = mockTask(
+    (handle: string): Promise<void> => {
+      if (this.records[handle]) throw new Error('Handle already exists');
+      this.records[handle] = {};
+      return Promise.resolve();
+    }
+  );
 
   public getPointer = mockTask((handle) => Promise.resolve(this.query(handle, 'pointer')));
   public setPointer = mockTask((handle, value) =>

@@ -1,5 +1,6 @@
 import assert = require('assert');
 import utils = require('web3-utils');
+import BigNumber from 'bn.js';
 
 import { assertTxEvent, assertRejection } from '../utils';
 
@@ -26,10 +27,10 @@ contract('Endorsements v1', (accounts) => {
   const uuid = 'eb9d203a-566b-4940-bb45-25ec0d98a94d';
   const anotherUuid = '70a77f55-b53a-4166-8016-adb885c7f62b';
 
-  const oneEther = utils.toBN(utils.toWei('1'));
+  const oneEther: BigNumber = utils.toBN(utils.toWei('1'));
   const totalAmount = oneEther;
-  const serviceFee = utils.toBN(utils.toWei('0.01'));
-  const endorseeShare = utils.toBN(utils.toWei('0.99'));
+  const serviceFee: BigNumber = utils.toBN(utils.toWei('0.01'));
+  const endorseeShare: BigNumber = utils.toBN(utils.toWei('0.99'));
 
   const paddedHandle = handle.padEnd(66, '0');
 

@@ -12,7 +12,7 @@ export const createTask = <Y>(
     estimate = () => Promise.resolve(ethers.utils.bigNumberify(0)),
   }: {
     execute: (context: any) => Promise<Y>;
-    estimate: (context: any) => Promise<ethers.utils.BigNumber>;
+    estimate?: (context: any) => Promise<ethers.utils.BigNumber>;
   },
   context = {}
 ): ITask<Y> => ({

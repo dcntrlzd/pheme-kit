@@ -25,7 +25,7 @@ export default class PhemeStorageTest implements IStorage {
 
   public writeObject = jest.fn(
     (object: any): Promise<string> => {
-      return this.writeData(this.serialize(object));
+      return this.writeData(Buffer.from(this.serialize(object)));
     }
   );
 
