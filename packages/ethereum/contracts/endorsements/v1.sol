@@ -168,11 +168,14 @@ contract EndorsementsV1 is Ownable {
     return totalAmount * serviceFeeRatioAsWei / (1 ether);
   }
 
+  function updateServiceFeeRatio(uint256 newServiceFeeRatioAsWei) public onlyOwner {
+    serviceFeeRatioAsWei = newServiceFeeRatioAsWei;
+  }
+
   function transfer(uint256 totalAmount, address recepient) public onlyOwner  {
     recepient.transfer(totalAmount);
   }
 
-  // Make the contract killable
   function kill() public onlyOwner {
     selfdestruct(msg.sender);
   }

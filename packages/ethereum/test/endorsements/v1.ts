@@ -26,9 +26,10 @@ contract('Endorsements v1', (accounts) => {
   const uuid = 'eb9d203a-566b-4940-bb45-25ec0d98a94d';
   const anotherUuid = '70a77f55-b53a-4166-8016-adb885c7f62b';
 
-  const totalAmount = utils.toWei('1');
-  const serviceFee = totalAmount * 0.01;
-  const endorseeShare = totalAmount * 0.99;
+  const oneEther = utils.toBN(utils.toWei('1'));
+  const totalAmount = oneEther;
+  const serviceFee = utils.toBN(utils.toWei('0.01'));
+  const endorseeShare = utils.toBN(utils.toWei('0.99'));
 
   const paddedHandle = handle.padEnd(66, '0');
 
@@ -76,8 +77,8 @@ contract('Endorsements v1', (accounts) => {
   };
 
   it('can endorse a content', async () => {
-    const initialEndorseeBalance = await web3.eth.getBalance(endorsee);
-    const initialContractBalance = await web3.eth.getBalance(endorsements.address);
+    const initialEndorseeBalance = utils.toBN(await web3.eth.getBalance(endorsee));
+    const initialContractBalance = utils.toBN(await web3.eth.getBalance(endorsements.address));
     const initialCount = await count(handle, uuid, endorser);
 
     const tx = await endorsements.endorse(handle, uuid, { from: endorser, value: totalAmount });
@@ -87,12 +88,18 @@ contract('Endorsements v1', (accounts) => {
       hashedUuid: utils.keccak256(uuid),
     });
 
-    const finalEndorseeBalance = await web3.eth.getBalance(endorsee);
-    const finalContractBalance = await web3.eth.getBalance(endorsements.address);
+    const finalEndorseeBalance = utils.toBN(await web3.eth.getBalance(endorsee));
+    const finalContractBalance = utils.toBN(await web3.eth.getBalance(endorsements.address));
     const finalCount = await count(handle, uuid, endorser);
 
-    assert.equal(finalEndorseeBalance - initialEndorseeBalance, endorseeShare);
-    assert.equal(finalContractBalance - initialContractBalance, serviceFee);
+    assert.equal(
+      finalEndorseeBalance.sub(initialEndorseeBalance).toString(),
+      endorseeShare.toString()
+    );
+    assert.equal(
+      finalContractBalance.sub(initialContractBalance).toString(),
+      serviceFee.toString()
+    );
 
     assert.equal(finalCount.byEndorser - initialCount.byEndorser, 1);
     assert.equal(finalCount.byHandle - initialCount.byHandle, 1);
@@ -102,7 +109,7 @@ contract('Endorsements v1', (accounts) => {
     assert.deepEqual(endorsementEndorser, endorser);
 
     const endorsementAmount = await endorsements.getEndorsementAmount(endorsementId);
-    assert.deepEqual(endorsementAmount.toString(), totalAmount);
+    assert.deepEqual(endorsementAmount.toString(), totalAmount.toString());
 
     const txBlock = await web3.eth.getBlock(tx.receipt.blockNumber);
     const endorsementCreatedAt = await endorsements.getEndorsementCreatedAt(endorsementId);
@@ -274,5 +281,17 @@ contract('Endorsements v1', (accounts) => {
     assert.equal(finalCount.byEndorser - initialCount.byEndorser, 0);
     assert.equal(finalCount.byHandle - initialCount.byHandle, 0);
     assert.equal(finalCount.byContent - initialCount.byContent, 0);
+  });
+
+  it('can update service fee ratio', async () => {
+    const initialValue = await endorsements.calculateServiceFee(oneEther);
+    await endorsements.updateServiceFeeRatio(utils.toWei('0.02'));
+    const finalValue = await endorsements.calculateServiceFee(oneEther);
+    assert.equal(finalValue.toString(), initialValue.mul(utils.toBN(2)).toString());
+  });
+
+  it('can be killed', async () => {
+    await endorsements.kill();
+    await assert.rejects(endorsements.calculateServiceFee(oneEther));
   });
 });

@@ -9,7 +9,7 @@ export interface ITask<T = void> {
 export const createTask = <Y>(
   {
     execute,
-    estimate,
+    estimate = () => Promise.resolve(ethers.utils.bigNumberify(0)),
   }: {
     execute: (context: any) => Promise<Y>;
     estimate: (context: any) => Promise<ethers.utils.BigNumber>;
@@ -42,7 +42,11 @@ export const createTaskFromContractMethod = (
 ): ITask<ethers.ContractTransaction> =>
   createTask(
     {
-      estimate: (context) => contract.estimate[methodName](...args, options),
+      estimate: (context) =>
+        Promise.all([
+          contract.estimate[methodName](...args, options),
+          contract.provider.getGasPrice(),
+        ]).then(([gasCost, gasPrice]) => gasCost.mul(gasPrice)),
       execute: (context) => {
         const transaction = contract.functions[methodName](...args, options);
         transaction.then((tx) => {
