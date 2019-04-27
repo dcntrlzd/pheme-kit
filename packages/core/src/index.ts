@@ -1,22 +1,10 @@
 import { v4 as generateUuid } from 'uuid';
-import StorageProxy, { IStorageMap } from './storage-proxy';
+
+import Storage from './storage';
+import Registry from './registry';
+
 import { ITask, createTask, modifyTask } from './task';
 import * as ethers from 'ethers';
-
-export interface IStorage {
-  publicUrlFor: (address: string) => string;
-
-  readData: (address: string) => Promise<Buffer>;
-  writeData: (data: Buffer) => Promise<string>;
-
-  serialize: (input: any) => string;
-  deserialize: (input: string) => any;
-
-  readObject: (address: string) => Promise<IBlock>;
-  writeObject: (block: IBlock) => Promise<string>;
-
-  addressForEstimation: () => string;
-}
 
 export interface IRegistry {
   register: (handle: string) => ITask<void>;
@@ -44,15 +32,27 @@ export interface IBlock {
 type HandleState = [string, IBlock[]];
 type HandleModification = [string, IBlock];
 
-export default class Pheme<Registry extends IRegistry> {
+export default class Pheme {
+
+  public static create(config: {
+    providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer;
+    contractAddress: string;
+    ipfsRpcUrl: string;
+    ipfsGatewayUrl: string;
+  }) {
+    const registry = Registry.attach(config.contractAddress, config.providerOrSigner);
+    const storage = new Storage(config.ipfsRpcUrl, config.ipfsGatewayUrl);
+    return new Pheme(registry, storage);
+  }
   public readonly registry: Registry;
-  public readonly storage: StorageProxy;
+  public readonly storage: Storage;
 
-  constructor(registry: Registry, storageMap: IStorageMap = {}) {
+  constructor(registry: Registry, storage: Storage) {
     if (!registry) throw new Error('Cannot initialize without a valid registry supplied.');
-
     this.registry = registry;
-    this.storage = new StorageProxy(storageMap);
+
+    if (!storage) throw new Error('Cannot initialize without a valid storage supplied.');
+    this.storage = storage;
   }
 
   public registerHandle(handle: string): ITask<void> {
@@ -70,10 +70,11 @@ export default class Pheme<Registry extends IRegistry> {
     });
   }
 
-  public updateHandleProfile(handle: string, profile: any): ITask<string> {
+  public updateHandleProfile(handle: string, profile: any, links: string[] = []): ITask<string> {
     return createTask({
-      estimate: () =>
-        this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate(),
+      estimate: async () => {
+        return this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate();
+      },
       execute: async (context) => {
         const profileAddress = await this.storage.writeObject(profile);
         await this.registry.setProfile(handle, profileAddress).execute(context);
@@ -82,7 +83,12 @@ export default class Pheme<Registry extends IRegistry> {
     });
   }
 
-  public pushToHandle(handle: string, data: Buffer, meta: any = {}): ITask<HandleModification> {
+  public pushToHandle(
+    handle: string,
+    data: Buffer,
+    meta: any = {},
+    links: string[] = []
+  ): ITask<HandleModification> {
     return createTask({
       estimate: () =>
         this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
@@ -91,16 +97,14 @@ export default class Pheme<Registry extends IRegistry> {
 
         const newBlock = {
           uuid: generateUuid(),
-          address: await this.storage.getStorage(previous).writeData(data),
+          address: await this.storage.writeData(data),
           timestamp: Date.now(),
           meta,
           previous,
         } as IBlock;
 
         const resolvedNewBlock = await newBlock;
-        const newBlockAddress = await this.storage
-          .getStorage(resolvedNewBlock.previous)
-          .writeObject(resolvedNewBlock);
+        const newBlockAddress = await this.storage.writeObject(resolvedNewBlock);
 
         await this.registry.setPointer(handle, newBlockAddress).execute(context);
         return [newBlockAddress, newBlock] as [string, IBlock];
@@ -112,18 +116,17 @@ export default class Pheme<Registry extends IRegistry> {
     handle: string,
     uuid: string,
     data: Buffer,
-    meta: any = {}
+    meta: any = {},
+    links: string[] = []
   ): ITask<HandleState> {
     return this.modifyHandleBlock(handle, uuid, async (oldBlock) => {
-      const storage = this.storage.getStorage(oldBlock.previous);
-
       const newBlock: IBlock = {
         ...oldBlock,
-        address: await storage.writeData(data),
+        address: await this.storage.writeData(data),
         meta,
       };
 
-      const newBlockAddress = await storage.writeObject(newBlock);
+      const newBlockAddress = await this.storage.writeObject(newBlock);
       return [newBlockAddress, newBlock];
     });
   }
@@ -196,7 +199,7 @@ export default class Pheme<Registry extends IRegistry> {
         while (rewrite.length > 0) {
           const block = rewrite.pop();
           block.previous = pointer;
-          pointer = await this.storage.getStorage(block.previous).writeObject(block);
+          pointer = await this.storage.writeObject(block);
           blocks.unshift(block);
         }
 

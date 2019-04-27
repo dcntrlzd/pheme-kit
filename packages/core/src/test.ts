@@ -2,8 +2,11 @@ import Pheme from './index';
 import { ITask, modifyTask, createTask } from './task';
 import * as ethers from 'ethers';
 
-import TestRegistry from './test/registry';
-import TestStorage from './test/storage';
+jest.mock('./registry');
+jest.mock('./storage');
+
+import RegistryMock from './__mocks__/registry';
+import StorageMock from './__mocks__/storage';
 
 describe('modifyTask', () => {
   it('should override the task', async () => {
@@ -37,12 +40,10 @@ describe('modifyTask', () => {
 });
 
 describe('Core', () => {
-  let core: Pheme<TestRegistry>;
+  let core: Pheme;
 
   beforeEach(() => {
-    core = new Pheme(new TestRegistry(), {
-      test: new TestStorage(),
-    });
+    core = new Pheme(new RegistryMock() as any, new StorageMock() as any);
   });
 
   describe('constructor', () => {
@@ -50,18 +51,24 @@ describe('Core', () => {
       expect(core).toBeTruthy();
     });
 
-    it('should not initialize if no constructor is passed', () => {
-      expect(() => new Pheme(undefined)).toThrowError(
+    it('should not initialize if no registry is passed', () => {
+      expect(() => new Pheme(undefined, core.storage)).toThrowError(
         'Cannot initialize without a valid registry supplied.'
+      );
+    });
+
+    it('should not initialize if no storage is passed', () => {
+      expect(() => new Pheme(core.registry, undefined)).toThrowError(
+        'Cannot initialize without a valid storage supplied.'
       );
     });
   });
 
   describe('registerHandle', () => {
     it('should register the supplied handle', async () => {
-      expect(await core.registry.records.test).toBeUndefined();
+      expect((core.registry as any).records.test).toBeUndefined();
       expect(await core.registerHandle('test').execute()).toBeUndefined();
-      expect(await core.registry.records.test).toBeDefined();
+      expect((core.registry as any).records.test).toBeDefined();
     });
   });
 
@@ -69,12 +76,14 @@ describe('Core', () => {
     beforeEach(() => core.registerHandle('test').execute());
 
     it('should update the handle profile', async () => {
-      expect(await core.updateHandleProfile('test', { bio: 'Hello World' }).execute());
+      await expect(
+        core.updateHandleProfile('test', { bio: 'Hello World' }).execute()
+      ).resolves.toBeDefined();
     });
 
     it('should get the handle profile', async () => {
       await core.updateHandleProfile('test', { bio: 'Hello World' }).execute();
-      expect(await core.getHandleProfile('test').execute()).toEqual({
+      await expect(core.getHandleProfile('test').execute()).resolves.toEqual({
         bio: 'Hello World',
       });
     });
@@ -230,19 +239,6 @@ describe('Core', () => {
       const [address, blocks] = await core.loadHandle('test').execute();
       expect(address).toBe(handle[0]);
       expect(blocks).toEqual([handle[1]]);
-    });
-  });
-
-  describe('storage handling', () => {
-    it('should be able to storeData and fetchData', async () => {
-      const data = 'HELLO WORLD';
-      const address = await core.storage.writeData(Buffer.from(data));
-      expect((await core.storage.readData(address)).toString()).toEqual(data);
-    });
-
-    it('should fail if an unknown storage is supplied as the preferred protocol', async () => {
-      const address = 'bzzzt://broken-link';
-      expect(() => core.storage.readData(address)).toThrowError('Unknown storage protocol');
     });
   });
 });

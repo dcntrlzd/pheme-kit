@@ -1,4 +1,3 @@
-import { IRegistry } from '../index';
 import { ITask, createTask } from '../task';
 import { v4 as uuid } from 'uuid';
 import * as ethers from 'ethers';
@@ -6,7 +5,7 @@ import * as ethers from 'ethers';
 const mockTask = <T, M>(fn: (...fnArgs: any) => Promise<T>) => (...args: any) =>
   createTask<T>({ execute: () => fn(...args) });
 
-export default class PhemeTestRegistry implements IRegistry {
+export default class PhemeRegistryMock {
   public records: { [handle: string]: any } = {};
 
   public register = mockTask(

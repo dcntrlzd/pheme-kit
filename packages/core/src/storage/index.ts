@@ -1,7 +1,8 @@
-import { IStorage } from '@pheme-kit/core';
 import * as URL from 'url';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
+
+const PROTOCOL_PATTERN = /([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/;
 
 export interface IDAGNode {
   data: Buffer;
@@ -41,10 +42,12 @@ export interface IIPFSClient {
   get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>;
 }
 
-export const hashFromUrl = (url: string) =>
-  (url.match(/([a-zA-Z0-9]+):\/\/([a-zA-Z0-9]+)/) || [])[2] || '';
+export const stripProtocol = (url: string) => {
+  const matches = url.match(PROTOCOL_PATTERN);
+  return matches ? matches[2] : url;
+};
 
-export default class PhemeStorageIPFS implements IStorage {
+export default class PhemeStorage {
   public readonly ipfs: IIPFSClient;
   public readonly gatewayUrl: string;
 
@@ -57,7 +60,7 @@ export default class PhemeStorageIPFS implements IStorage {
     }) as IIPFSClient;
   }
 
-  public addressForEstimation = () => 'ipfs://qmv8ndh7ageh9b24zngaextmuhj7aiuw3scc8hkczvjkww';
+  public addressForEstimation = () => 'qmv8ndh7ageh9b24zngaextmuhj7aiuw3scc8hkczvjkww';
 
   public serialize(input: any) {
     return JSON.stringify(input);
@@ -70,7 +73,7 @@ export default class PhemeStorageIPFS implements IStorage {
   public publicUrlFor(address: string) {
     if (!address) return '';
 
-    const ipfsHash = hashFromUrl(address);
+    const ipfsHash = stripProtocol(address);
     return ipfsHash ? `${this.gatewayUrl}/ipfs/${ipfsHash}` : '';
   }
 
@@ -85,16 +88,16 @@ export default class PhemeStorageIPFS implements IStorage {
     return Buffer.from(data);
   }
 
-  public async writeData(data: Buffer) {
-    const [{ hash }] = await this.ipfs.add(data);
-    return `ipfs://${hash}`;
+  public async writeData(data: Buffer, estimate: boolean = false) {
+    const [{ hash }] = await this.ipfs.add(data, { onlyHash: estimate });
+    return hash;
   }
 
   public async readObject(address: string): Promise<any> {
     return this.deserialize((await this.readData(address)).toString());
   }
 
-  public async writeObject(object: any): Promise<string> {
-    return this.writeData(Buffer.from(this.serialize(object)));
+  public async writeObject(object: any, estimate: boolean = false): Promise<string> {
+    return this.writeData(Buffer.from(this.serialize(object)), estimate);
   }
 }

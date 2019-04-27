@@ -2,8 +2,6 @@ declare var artifacts: any;
 declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
 
 import Pheme from '@pheme-kit/core/src';
-import PhemeRegistry from '@pheme-kit/core/src/registry';
-import PhemeStorageIpfs from '@pheme-kit/storage-ipfs/src';
 
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
@@ -23,7 +21,7 @@ contract('E2E Test', (accounts) => {
   let registry: any;
 
   let owner: string;
-  let pheme: Pheme<PhemeRegistry>;
+  let pheme: Pheme;
   let ipfsServer: any;
   let provider: ethers.providers.Web3Provider;
 
@@ -32,13 +30,6 @@ contract('E2E Test', (accounts) => {
     registry = await Registry.deployed();
 
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
-    const registryContract = new ethers.Contract(
-      registry.address,
-      registry.abi,
-      provider.getSigner()
-    );
-
-    const phemeRegistry = new PhemeRegistry(registryContract);
 
     ipfsServer = await new Promise((resolve, reject) => {
       IPFSFactory.create().spawn((err, ipfsd) => {
@@ -51,11 +42,11 @@ contract('E2E Test', (accounts) => {
       });
     });
 
-    pheme = new Pheme(phemeRegistry, {
-      ipfs: new PhemeStorageIpfs(
-        `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
-        `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`
-      ),
+    pheme = Pheme.create({
+      providerOrSigner: provider.getSigner(),
+      contractAddress: registry.address,
+      ipfsRpcUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
+      ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
     });
   });
 

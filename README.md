@@ -31,17 +31,14 @@ First of all you'll need to pick a registry to start working on a feed. You can 
 
 ```js
 import Pheme from '@pheme-kit/core';
-import PhemeRegistry from '@pheme-kit/core/lib/registry';
-import PhemeStorageIpfs from '@pheme-kit/storage-ipfs';
-
-// Create a registry instance by using the contract address and an ethers.js provider or signer
-// Check https://docs.ethers.io/ethers.js/html/ to lear more at about ethers.js
-const registry = PhemeRegistry.attach(CONTRACT_ADDRESS, etherProvider.getSigner());
 
 // Create a Pheme instance with ipfs storage configured
-const pheme = new Pheme(registry, {
-  ipfs: new PhemeStorageIpfs(IPFS_RPC_URL, IPFS_GATEWAY_URL),
-});
+const pheme = Pheme.create({
+  providerOrSigner: ethersProvider.getSigner(),
+  contractAddress: CONTRACT_ADDRESS,
+  ipfsRpcURL: IPFS_RPC_URL,
+  ipfsGatewayURL: IPFS_GATEWAY_URL
+);
 ```
 
 `pheme` object initialized above will let you to read and write feeds. Please check the registry implementation for more details.

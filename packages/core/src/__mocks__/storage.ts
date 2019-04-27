@@ -1,7 +1,6 @@
-import { IStorage } from '../index';
 import { v4 as uuid } from 'uuid';
 
-export default class PhemeStorageTest implements IStorage {
+export default class PhemeStorageMock {
   public storage: { [address: string]: any } = {};
 
   public publicUrlFor = jest.fn((address: string) => `https://GATEWAY_URL/${address}`);
