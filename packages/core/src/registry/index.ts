@@ -1,5 +1,4 @@
 import * as ethers from 'ethers';
-import { IRegistry } from '../index';
 import { modifyTask, createTaskFromContractMethod, ITask } from '../task';
 import RegistryAbi from '@pheme-kit/ethereum/artifacts/abi/RegistryV1.json';
 
@@ -7,7 +6,7 @@ const stringToBytes = (input: string) => ethers.utils.formatBytes32String(input)
 
 const bytesToString = (input: string) => ethers.utils.parseBytes32String(input);
 
-export default class PhemeRegistry implements IRegistry {
+export default class PhemeRegistry {
   public static attach(
     address: string,
     providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer

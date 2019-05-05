@@ -2,6 +2,7 @@ import PhemeStorage from './index';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 import uuid from 'uuid/v4';
+import * as multihashes from 'multihashes';
 
 const IPFS_RPC = 'http://localhost:5001';
 const IPFS_GATEWAY = 'http://localhost';
@@ -23,12 +24,15 @@ describe('PhemeStorage', () => {
     });
 
     (instance.ipfs.add as any).mockImplementation((object: Buffer) => {
-      const path = uuid().replace(/-/gi, '');
-      repo[path] = object;
+      const path = uuid();
+      const rawHash = multihashes.encode(Buffer.from(path), 'sha2-256');
+      const hash = multihashes.toB58String(rawHash);
+
+      repo[hash] = object;
       return Promise.resolve([
         {
           path,
-          hash: path,
+          hash,
           size: object.byteLength,
         },
       ]);
