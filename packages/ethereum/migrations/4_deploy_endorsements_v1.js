@@ -1,6 +1,6 @@
-var Registry = artifacts.require('RegistryV1');
-var Endorsements = artifacts.require('EndorsementsV1');
-var Storage = artifacts.require('EndorsementsStorage');
+const Registry = artifacts.require('RegistryV1');
+const Endorsements = artifacts.require('EndorsementsV1');
+const Storage = artifacts.require('EndorsementsStorage');
 
 module.exports = async (deployer) => {
   let registry;

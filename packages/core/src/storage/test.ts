@@ -1,8 +1,8 @@
-import PhemeStorage from './index';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 import uuid from 'uuid/v4';
 import * as multihashes from 'multihashes';
+import PhemeStorage from './index';
 
 const IPFS_RPC = 'http://localhost:5001';
 const IPFS_GATEWAY = 'http://localhost';

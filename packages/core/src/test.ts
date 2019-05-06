@@ -1,12 +1,12 @@
-import Pheme, { detectBlockVersion } from './index';
-import { ITask, modifyTask, createTask } from './task';
 import * as ethers from 'ethers';
-
-jest.mock('./registry');
-jest.mock('./storage');
+import Pheme, { detectBlockVersion } from './index';
+import { Task, modifyTask, createTask } from './task';
 
 import RegistryMock from './__mocks__/registry';
 import StorageMock from './__mocks__/storage';
+
+jest.mock('./registry');
+jest.mock('./storage');
 
 describe('detectAddressVersion', () => {
   it('should be able to detect v1 addresses', () => {
@@ -27,12 +27,12 @@ describe('detectAddressVersion', () => {
 
 describe('modifyTask', () => {
   it('should override the task', async () => {
-    const taskBuilder = (): ITask => {
+    const taskBuilder = (): Task => {
       return createTask(
         {
           estimate: async () => ethers.constants.Zero,
           execute: (context) => {
-            context.status = 'DONE';
+            Object.assign(context, { status: 'DONE' });
             return Promise.resolve();
           },
         },
@@ -128,7 +128,7 @@ describe('Core', () => {
 
     it('should pass a blank meta object if not provided', async () => {
       await core.pushToHandle('test', Buffer.from('CONTENT')).execute();
-      const [address, chain] = await core.loadHandle('test').execute();
+      const [_, chain] = await core.loadHandle('test').execute();
       expect(chain[0].meta).toEqual({});
     });
   });
@@ -178,7 +178,7 @@ describe('Core', () => {
       });
 
       it('should remove the content with the supplied uuid for the supplied handle', async () => {
-        const [oldAddress, oldChain] = await core.loadHandle('test').execute();
+        const [_, oldChain] = await core.loadHandle('test').execute();
         await core.removeFromHandle('test', oldChain[0].uuid).execute();
 
         const [address, chain] = await core.loadHandle('test').execute();
@@ -220,7 +220,7 @@ describe('Core', () => {
       });
 
       it('should not remove any content when an invalid uuid is passed', async () => {
-        const [oldAddress, oldChain] = await core.loadHandle('test').execute();
+        const [oldAddress] = await core.loadHandle('test').execute();
 
         expect(core.removeFromHandle('test', 'XXXXXX').execute()).rejects.toThrow(
           'test handle does not need modification'

@@ -1,7 +1,7 @@
+import { assertTxEvent, assertRejection } from '../utils';
+
 import assert = require('assert');
 import utils = require('web3-utils');
-
-import { assertTxEvent, assertRejection } from '../utils';
 
 const RegistryContract = artifacts.require('RegistryV1');
 

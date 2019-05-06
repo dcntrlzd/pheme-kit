@@ -1,6 +1,4 @@
-import { ITask, createTask } from '../task';
-import { v4 as uuid } from 'uuid';
-import * as ethers from 'ethers';
+import { createTask } from '../task';
 
 const mockTask = <T, M>(fn: (...fnArgs: any) => Promise<T>) => (...args: any) =>
   createTask<T>({ execute: () => fn(...args) });
@@ -17,16 +15,19 @@ export default class PhemeRegistryMock {
   );
 
   public getPointer = mockTask((handle) => Promise.resolve(this.query(handle, 'pointer')));
+
   public setPointer = mockTask((handle, value) =>
     Promise.resolve(this.update(handle, 'pointer', value))
   );
 
   public getOwner = mockTask((handle) => Promise.resolve(this.query(handle, 'owner')));
+
   public setOwner = mockTask((handle, value) =>
     Promise.resolve(this.update(handle, 'owner', value))
   );
 
   public getProfile = mockTask((handle) => Promise.resolve(this.query(handle, 'profile')));
+
   public setProfile = mockTask((handle, value) =>
     Promise.resolve(this.update(handle, 'profile', value))
   );

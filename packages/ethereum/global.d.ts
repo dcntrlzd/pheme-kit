@@ -1,3 +1,3 @@
-declare var artifacts: any;
-declare var web3: any;
-declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
+declare let artifacts: any;
+declare let web3: any;
+declare let contract: (name: string, callback: (accounts: string[]) => any) => any;

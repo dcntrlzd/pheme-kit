@@ -1,6 +1,6 @@
 import * as ethers from 'ethers';
 
-export interface ITask<T = void> {
+export interface Task<T = void> {
   context: any;
   execute: (parentContext?: any) => Promise<T>;
   estimate: (parentContext?: any) => Promise<ethers.utils.BigNumber>;
@@ -15,7 +15,7 @@ export const createTask = <Y>(
     estimate?: (context: any) => Promise<ethers.utils.BigNumber>;
   },
   context = {}
-): ITask<Y> => ({
+): Task<Y> => ({
   context,
   execute: (parentContext: any = {}) =>
     execute(context).then((result) => {
@@ -39,10 +39,10 @@ export const createTaskFromContractMethod = (
   methodName: string,
   args: any[],
   options: any = {}
-): ITask<ethers.ContractTransaction> =>
+): Task<ethers.ContractTransaction> =>
   createTask(
     {
-      estimate: (context) =>
+      estimate: () =>
         Promise.all([
           contract.estimate[methodName](...args, options),
           contract.provider.getGasPrice(),
@@ -50,7 +50,7 @@ export const createTaskFromContractMethod = (
       execute: (context) => {
         const transaction = contract.functions[methodName](...args, options);
         transaction.then((tx) => {
-          context.txHash = tx.hash;
+          Object.assign(context, { txHash: tx.hash });
         });
         return transaction;
       },

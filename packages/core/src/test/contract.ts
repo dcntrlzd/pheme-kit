@@ -15,7 +15,7 @@ const Contract: any = jest.fn(() => {
         const handle = Object.keys(storage)[index] || '';
         return Promise.resolve(handle);
       }),
-      getHandleCount: jest.fn((handle) => {
+      getHandleCount: jest.fn(() => {
         const count = Object.keys(storage).length;
         return Promise.resolve(new BigNumber(count));
       }),

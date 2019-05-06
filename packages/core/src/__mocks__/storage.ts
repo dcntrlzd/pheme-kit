@@ -18,21 +18,21 @@ export default class PhemeStorageMock {
 
   public readObject = jest.fn(
     async (address: string): Promise<any> => {
-      return this.deserialize(await this.readData(address));
+      return PhemeStorageMock.deserialize(await this.readData(address));
     }
   );
 
   public writeObject = jest.fn(
     (object: any): Promise<string> => {
-      return this.writeData(Buffer.from(this.serialize(object)));
+      return this.writeData(Buffer.from(PhemeStorageMock.serialize(object)));
     }
   );
 
-  public serialize(input: any) {
+  public static serialize(input: any) {
     return JSON.stringify(input);
   }
 
-  public deserialize(input: string) {
+  public static deserialize(input: string) {
     return JSON.parse(input);
   }
 

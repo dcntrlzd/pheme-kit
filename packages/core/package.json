@@ -37,7 +37,6 @@
   "dependencies": {
     "@pheme-kit/ethereum": "^0.0.1-alpha.8",
     "axios": "^0.18.0",
-    "hash.js": "^1.1.7",
     "ipfs-http-client": "^30.1.3",
     "uuid": "^3.3.2"
   }

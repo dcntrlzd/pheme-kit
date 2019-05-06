@@ -1,13 +1,14 @@
-import assert = require('assert');
-import utils = require('web3-utils');
 import BigNumber from 'bn.js';
 
-import { assertTxEvent, assertRejection } from '../utils';
+import { assertTxEvent } from '../utils';
+
+import assert = require('assert');
+import utils = require('web3-utils');
 
 const RegistryContract = artifacts.require('RegistryV1');
 const EndorsementsContract = artifacts.require('EndorsementsV1');
 
-interface ICount {
+interface Count {
   byEndorser: number;
   byHandle: number;
   byContent: number;
@@ -20,7 +21,6 @@ contract('Endorsements v1', (accounts) => {
   let endorser;
   let recipient;
   let anotherEndorser;
-  let owner;
   let endorsementId;
 
   const handle = utils.fromUtf8('endorsements-test');
@@ -35,7 +35,7 @@ contract('Endorsements v1', (accounts) => {
   const paddedHandle = handle.padEnd(66, '0');
 
   before(async () => {
-    [owner, endorsee, endorser, recipient, anotherEndorser] = accounts;
+    [endorsee, endorser, recipient, anotherEndorser] = accounts;
     registry = await RegistryContract.deployed();
     endorsements = await EndorsementsContract.deployed();
     endorsementId = await endorsements.getEndorsementId(handle, uuid, endorser);
@@ -43,7 +43,7 @@ contract('Endorsements v1', (accounts) => {
     await registry.registerHandle(handle, { from: endorsee });
   });
 
-  const count = async (handleToCount, uuidToCount, endorserToCount): Promise<ICount> => {
+  const count = async (handleToCount, uuidToCount, endorserToCount): Promise<Count> => {
     const [byEndorser, byHandle, byContent] = await Promise.all([
       endorsements.getEndorsementCountByEndorser(endorserToCount),
       endorsements.getEndorsementCountByHandle(handleToCount),
@@ -176,7 +176,7 @@ contract('Endorsements v1', (accounts) => {
     const initialCount = await endorsements.getEndorsementCountByContent(handle, uuid);
     const initialAmount = await endorsements.getEndorsementAmount(endorsementId);
 
-    const tx = await endorsements.endorse(handle, uuid, { from: endorser, value: totalAmount });
+    await endorsements.endorse(handle, uuid, { from: endorser, value: totalAmount });
 
     const finalCount = await endorsements.getEndorsementCountByContent(handle, uuid);
     const finalAmount = await endorsements.getEndorsementAmount(endorsementId);

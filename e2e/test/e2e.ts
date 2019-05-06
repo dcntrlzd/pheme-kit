@@ -1,41 +1,32 @@
-declare var artifacts: any;
-declare var contract: (name: string, callback: (accounts: string[]) => any) => any;
-
 import Pheme from '@pheme-kit/core/src';
 
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
 
-import assert = require('assert');
+declare let artifacts: any;
+declare let contract: (name: string, callback: (accounts: string[]) => any) => any;
 
-const assertTxEvent = (tx, event, args) => {
-  const log = tx.logs.find((cursor) => cursor.event === event);
-  assert.deepStrictEqual(log.args, args);
-};
+import assert = require('assert');
 
 const HANDLE = 'test';
 const PROFILE = { description: 'HELLO' };
 
-contract('E2E Test', (accounts) => {
+contract('E2E Test', () => {
   const Registry: any = artifacts.require('RegistryV1');
   let registry: any;
-
-  let owner: string;
   let pheme: Pheme;
   let ipfsServer: any;
   let provider: ethers.providers.Web3Provider;
 
   before(async () => {
-    [owner] = accounts;
     registry = await Registry.deployed();
-
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
 
     ipfsServer = await new Promise((resolve, reject) => {
       IPFSFactory.create().spawn((err, ipfsd) => {
         if (err) {
-          throw err;
           reject(err);
+          return;
         }
 
         resolve(ipfsd);
@@ -45,10 +36,8 @@ contract('E2E Test', (accounts) => {
     pheme = Pheme.create({
       providerOrSigner: provider.getSigner(),
       contractAddress: registry.address,
-      ipfsRpcUrl: `http://localhost:5001`,
-      ipfsGatewayUrl: `http://localhost:9000`,
-      // ipfsRpcUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
-      // ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
+      ipfsRpcUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
+      ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
     });
   });
 

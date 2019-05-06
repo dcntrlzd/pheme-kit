@@ -1,0 +1,7 @@
+node_modules
+artifacts
+static
+.ipfs
+.circleci
+packages/*/*.d.ts
+packages/*/*.js

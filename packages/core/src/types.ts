@@ -12,6 +12,6 @@ export interface Node<M = any> {
   previous: string;
 }
 
-export type Chain<M = any> = Array<Node<M>>;
+export type Chain<M = any> = Node<M>[];
 
 export type BlockVersion = 'v1' | 'v2' | 'v3';
