@@ -1,28 +1,12 @@
 import * as ethers from 'ethers';
-import Pheme, { detectBlockVersion } from './index';
+import Pheme from './index';
 import { Task, modifyTask, createTask } from './task';
 
-import RegistryMock from './__mocks__/registry';
-import StorageMock from './__mocks__/storage';
+jest.mock('./registry', () => jest.requireActual('./test/registry'));
 
-jest.mock('./registry');
-jest.mock('./storage');
-
-describe('detectAddressVersion', () => {
-  it('should be able to detect v1 addresses', () => {
-    const v1Address = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-    expect(detectBlockVersion(v1Address)).toBe('v1');
-  });
-
-  it('should be able to detect v2 addresses', () => {
-    const v2Address = 'ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-    expect(detectBlockVersion(v2Address)).toBe('v2');
-  });
-
-  it('should be able to detect v3 addresses', () => {
-    const v3Address = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/block.json';
-    expect(detectBlockVersion(v3Address)).toBe('v3');
-  });
+const buildContentFile = (content: string) => ({
+  path: 'content.txt',
+  content: Buffer.from(content),
 });
 
 describe('modifyTask', () => {
@@ -60,7 +44,12 @@ describe('Core', () => {
   let core: Pheme;
 
   beforeEach(() => {
-    core = new Pheme(new RegistryMock() as any, new StorageMock() as any);
+    core = Pheme.create({
+      providerOrSigner: undefined,
+      contractAddress: undefined,
+      ipfsGatewayUrl: process.env.IPFS_GATEWAY_URL,
+      ipfsRpcUrl: process.env.IPFS_RPC_URL,
+    });
   });
 
   describe('constructor', () => {
@@ -110,26 +99,31 @@ describe('Core', () => {
     beforeEach(() => core.registerHandle('test').execute());
 
     it('should push content to the supplied handle', async () => {
-      await core.pushToHandle('test', Buffer.from('CONTENT 1'), { title: 'CONTENT 1' }).execute();
-      await core.pushToHandle('test', Buffer.from('CONTENT 2'), { title: 'CONTENT 2' }).execute();
-      await core.pushToHandle('test', Buffer.from('CONTENT 3'), { title: 'CONTENT 3' }).execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 1'), { title: 'CONTENT 1' })
+        .execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 2'), { title: 'CONTENT 2' })
+        .execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 3'), { title: 'CONTENT 3' })
+        .execute();
 
-      const [address, chain] = await core.loadHandle('test').execute();
-      expect(address).toBeDefined();
+      const chain = await core.loadHandle('test').execute();
       expect(chain.length).toBe(3);
 
       chain.forEach((ring, i) => {
-        expect(ring.address).toBeDefined();
-        expect(ring.uuid).toBeDefined();
-        expect(ring.timestamp).toBeDefined();
-        expect(ring.meta.title).toBe(`CONTENT ${chain.length - i}`);
+        expect(ring.block.address).toBeDefined();
+        expect(ring.block.uuid).toBeDefined();
+        expect(ring.block.timestamp).toBeDefined();
+        expect(ring.block.meta.title).toBe(`CONTENT ${chain.length - i}`);
       });
     });
 
     it('should pass a blank meta object if not provided', async () => {
-      await core.pushToHandle('test', Buffer.from('CONTENT')).execute();
-      const [_, chain] = await core.loadHandle('test').execute();
-      expect(chain[0].meta).toEqual({});
+      await core.pushToHandle('test', buildContentFile('CONTENT')).execute();
+      const chain = await core.loadHandle('test').execute();
+      expect(chain[0].block.meta).toEqual({});
     });
   });
 
@@ -137,31 +131,38 @@ describe('Core', () => {
     beforeEach(async () => {
       await core.registerHandle('test').execute();
 
-      await core.pushToHandle('test', Buffer.from('CONTENT 1'), { title: 'CONTENT 1' }).execute();
-      await core.pushToHandle('test', Buffer.from('CONTENT 2'), { title: 'CONTENT 2' }).execute();
-      await core.pushToHandle('test', Buffer.from('CONTENT 3'), { title: 'CONTENT 3' }).execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 1'), { title: 'CONTENT 1' })
+        .execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 2'), { title: 'CONTENT 2' })
+        .execute();
+      await core
+        .pushToHandle('test', buildContentFile('CONTENT 3'), { title: 'CONTENT 3' })
+        .execute();
     });
 
     it('should replace the block contents of the block with the supplied uuid', async () => {
-      const [oldAddress, oldChain] = await core.loadHandle('test').execute();
+      const oldChain = await core.loadHandle('test').execute();
+      const oldAddress = oldChain[0].address;
       const blockToReplace = oldChain[1];
 
-      const oldContent = await core.storage.readData(blockToReplace.address);
+      const oldContent = await core.storage.read(blockToReplace.contentAddress);
       expect(oldContent.toString()).toBe('CONTENT 2');
 
       const newContent = 'CONTENT 2 (MODIFIED)';
 
-      const [newAddress, newChain] = await core
-        .replaceFromHandle('test', blockToReplace.uuid, Buffer.from(newContent), {
+      const newChain = await core
+        .replaceFromHandle('test', blockToReplace.block.uuid, buildContentFile(newContent), {
           title: newContent,
         })
         .execute();
 
       expect(newChain).toHaveLength(3);
-      expect(newAddress).not.toBe(oldAddress);
-      const newBlock = newChain[1];
-      expect(newBlock.meta.title).toBe(newContent);
-      expect((await core.storage.readData(newBlock.address)).toString()).toBe(newContent);
+      expect(newChain[0].address).not.toBe(oldAddress);
+      const newBlockWrapper = newChain[1];
+      expect(newBlockWrapper.block.meta.title).toBe(newContent);
+      expect((await core.storage.read(newBlockWrapper.contentAddress)).toString()).toBe(newContent);
     });
   });
 
@@ -171,20 +172,19 @@ describe('Core', () => {
         await core.registerHandle('test').execute();
 
         await core
-          .pushToHandle('test', Buffer.from('CONTENT 1'), {
+          .pushToHandle('test', buildContentFile('CONTENT 1'), {
             title: 'CONTENT 1',
           })
           .execute();
       });
 
       it('should remove the content with the supplied uuid for the supplied handle', async () => {
-        const [_, oldChain] = await core.loadHandle('test').execute();
-        await core.removeFromHandle('test', oldChain[0].uuid).execute();
+        const oldChain = await core.loadHandle('test').execute();
+        await core.removeFromHandle('test', oldChain[0].block.uuid).execute();
 
-        const [address, chain] = await core.loadHandle('test').execute();
+        const chain = await core.loadHandle('test').execute();
         expect(chain.length).toBe(0);
-        expect(chain.map((block) => block.meta.title)).toEqual([]);
-        expect(address).toBeUndefined();
+        expect(chain.map((blockWrapper) => blockWrapper.block.meta.title)).toEqual([]);
       });
     });
 
@@ -193,47 +193,50 @@ describe('Core', () => {
         await core.registerHandle('test').execute();
 
         await core
-          .pushToHandle('test', Buffer.from('CONTENT 1'), {
+          .pushToHandle('test', buildContentFile('CONTENT 1'), {
             title: 'CONTENT 1',
           })
           .execute();
         await core
-          .pushToHandle('test', Buffer.from('CONTENT 2'), {
+          .pushToHandle('test', buildContentFile('CONTENT 2'), {
             title: 'CONTENT 2',
           })
           .execute();
         await core
-          .pushToHandle('test', Buffer.from('CONTENT 3'), {
+          .pushToHandle('test', buildContentFile('CONTENT 3'), {
             title: 'CONTENT 3',
           })
           .execute();
       });
 
       it('should remove the content with the supplied uuid for the supplied handle', async () => {
-        const [oldAddress, oldChain] = await core.loadHandle('test').execute();
-        await core.removeFromHandle('test', oldChain[1].uuid).execute();
+        const oldChain = await core.loadHandle('test').execute();
+        await core.removeFromHandle('test', oldChain[1].block.uuid).execute();
 
-        const [address, chain] = await core.loadHandle('test').execute();
+        const chain = await core.loadHandle('test').execute();
         expect(chain.length).toBe(2);
-        expect(chain.map((block) => block.meta.title)).toEqual(['CONTENT 3', 'CONTENT 1']);
-        expect(address).not.toEqual(oldAddress);
+        expect(chain.map((wrappedBlock) => wrappedBlock.block.meta.title)).toEqual([
+          'CONTENT 3',
+          'CONTENT 1',
+        ]);
+        expect(chain[0].address).not.toEqual(oldChain[0].address);
       });
 
       it('should not remove any content when an invalid uuid is passed', async () => {
-        const [oldAddress] = await core.loadHandle('test').execute();
+        const oldChain = await core.loadHandle('test').execute();
 
         expect(core.removeFromHandle('test', 'XXXXXX').execute()).rejects.toThrow(
           'test handle does not need modification'
         );
 
-        const [address, chain] = await core.loadHandle('test').execute();
+        const chain = await core.loadHandle('test').execute();
         expect(chain.length).toBe(3);
-        expect(chain.map((block) => block.meta.title)).toEqual([
+        expect(chain.map((wrappedBlock) => wrappedBlock.block.meta.title)).toEqual([
           'CONTENT 3',
           'CONTENT 2',
           'CONTENT 1',
         ]);
-        expect(address).toEqual(oldAddress);
+        expect(chain[0].address).toEqual(oldChain[0].address);
       });
     });
   });
@@ -242,20 +245,19 @@ describe('Core', () => {
     beforeEach(() => core.registerHandle('test').execute());
 
     it('should load the handle for an empty chain', async () => {
-      const [address, blocks] = await core.loadHandle('test').execute();
-      expect(address).toBeUndefined();
-      expect(blocks).toEqual([]);
+      const chain = await core.loadHandle('test').execute();
+      expect(chain.length).toEqual(0);
     });
 
     it('should load the handle for a loaded chain', async () => {
-      const handle = await core
-        .pushToHandle('test', Buffer.from('HELLO WORLD'), {
+      const newContent = await core
+        .pushToHandle('test', buildContentFile('HELLO WORLD'), {
           title: 'HELLO WORLD',
         })
         .execute();
-      const [address, blocks] = await core.loadHandle('test').execute();
-      expect(address).toBe(handle[0]);
-      expect(blocks).toEqual([handle[1]]);
+
+      const secondChain = await core.loadHandle('test').execute();
+      expect(newContent.address).toBe(secondChain[0].address);
     });
   });
 });

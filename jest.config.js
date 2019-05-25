@@ -13,6 +13,8 @@ module.exports = {
     "node",
     "sol"
   ],
+  "globalSetup": "./config/jest-setup.ts",
+  "globalTeardown": "./config/jest-teardown.ts",
   "moduleDirectories": [
     "node_modules",
     "packages"

@@ -4,6 +4,10 @@ const mockTask = <T, M>(fn: (...fnArgs: any) => Promise<T>) => (...args: any) =>
   createTask<T>({ execute: () => fn(...args) });
 
 export default class PhemeRegistryMock {
+  public static attach() {
+    return new PhemeRegistryMock();
+  }
+
   public records: { [handle: string]: any } = {};
 
   public register = mockTask(
