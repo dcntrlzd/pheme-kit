@@ -38,6 +38,8 @@ contract('E2E Test', () => {
       contractAddress: registry.address,
       ipfsRpcUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
       ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
+      // ipfsRpcUrl: `http://localhost:5001`,
+      // ipfsGatewayUrl: `http://localhost:9000`,
     });
   });
 
@@ -54,12 +56,20 @@ contract('E2E Test', () => {
     assert.deepEqual(chainBefore, []);
 
     await pheme
-      .pushToHandle(HANDLE, Buffer.from('# FIRST\nLorem ipsum dolor sit amet.'), { title: 'FIRST' })
+      .pushToHandle(
+        HANDLE,
+        { path: 'content.txt', content: Buffer.from('# FIRST\nLorem ipsum dolor sit amet.') },
+        { title: 'FIRST' }
+      )
       .execute();
     await pheme
-      .pushToHandle(HANDLE, Buffer.from('# SECOND\nLorem ipsum dolor sit amet.'), {
-        title: 'SECOND',
-      })
+      .pushToHandle(
+        HANDLE,
+        { path: 'content.txt', content: Buffer.from('# SECOND\nLorem ipsum dolor sit amet.') },
+        {
+          title: 'SECOND',
+        }
+      )
       .execute();
 
     const chain = await pheme.loadHandle(HANDLE).execute();
@@ -75,7 +85,7 @@ contract('E2E Test', () => {
     assert(firstPost.timestamp);
     assert.deepEqual(firstPost.meta, { title: 'FIRST' });
     assert(!firstPost.previous);
-    const firstPostContent = await firstNode.loadContent();
+    const firstPostContent = await pheme.storage.readContent(firstNode);
     assert(firstPostContent.toString(), '# FIRST\nLorem ipsum dolor sit amet.');
 
     assert(secondPost.uuid);
@@ -83,13 +93,21 @@ contract('E2E Test', () => {
     assert(secondPost.timestamp);
     assert.deepEqual(secondPost.meta, { title: 'SECOND' });
     assert(secondPost.previous);
-    const secondPostContent = await secondNode.loadContent();
+    const secondPostContent = await pheme.storage.readContent(secondNode);
     assert(secondPostContent.toString(), '# SECOND\nLorem ipsum dolor sit amet.');
 
     await pheme
-      .replaceFromHandle(HANDLE, secondPost.uuid, Buffer.from('# SECOND MODIFIED'), {
-        title: 'SECOND MODIFIED',
-      })
+      .replaceFromHandle(
+        HANDLE,
+        secondPost.uuid,
+        {
+          path: 'content.txt',
+          content: Buffer.from('# SECOND MODIFIED'),
+        },
+        {
+          title: 'SECOND MODIFIED',
+        }
+      )
       .execute();
     const [modifiedSecondNode, unmodifiedFirstNode] = await pheme.loadHandle(HANDLE).execute();
 
@@ -100,15 +118,24 @@ contract('E2E Test', () => {
     assert.deepEqual(unmodifiedFirstPost, firstPost);
 
     assert.equal(modifiedSecondNode.block.uuid, secondPost.uuid);
-    assert.notEqual(modifiedSecondNode.contentAddress, secondNode.contentAddress);
+    assert.notEqual(modifiedSecondNode.getContentAddress(), secondNode.getContentAddress());
     // TODO: We should update the timestamp as well
     assert.equal(modifiedSecondPost.timestamp, secondPost.timestamp);
     assert.deepEqual(modifiedSecondPost.meta, { title: 'SECOND MODIFIED' });
     assert.equal(modifiedSecondPost.previous, secondPost.previous);
-    const modifiedSecondPostContent = await modifiedSecondNode.loadContent();
+    const modifiedSecondPostContent = await pheme.storage.readContent(modifiedSecondNode);
     assert(modifiedSecondPostContent.toString(), '# SECOND MODIFIED');
 
-    await pheme.pushToHandle(HANDLE, Buffer.from('# THIRD'), { title: 'THIRD' }).execute();
+    await pheme
+      .pushToHandle(
+        HANDLE,
+        {
+          path: 'content.txt',
+          content: Buffer.from('# THIRD'),
+        },
+        { title: 'THIRD' }
+      )
+      .execute();
     await pheme.removeFromHandle(HANDLE, modifiedSecondPost.uuid).execute();
     const [thirdNode] = await pheme.loadHandle(HANDLE).execute();
     const { block: thirdPost } = thirdNode;
@@ -121,7 +148,7 @@ contract('E2E Test', () => {
     assert(thirdPost.timestamp);
     assert.deepEqual(thirdPost.meta, { title: 'THIRD' });
     assert.equal(thirdPost.previous, modifiedSecondPost.previous);
-    const thirdPostContent = await thirdNode.loadContent();
+    const thirdPostContent = await pheme.storage.readContent(thirdNode);
     assert(thirdPostContent.toString(), '# THIRD');
   });
 
@@ -148,13 +175,27 @@ contract('E2E Test', () => {
     const [v2Node, v1Node] = await pheme.loadHandle(HANDLE).execute();
 
     assert.deepEqual(v1Node.block.meta.version, 1);
-    assert.deepEqual(await v1Node.loadContent().then((buffer) => buffer.toString()), 'V1');
+    assert.deepEqual(
+      await pheme.storage.readContent(v1Node).then((buffer) => buffer.toString()),
+      'V1'
+    );
 
     assert.deepEqual(v2Node.block.meta.version, 2);
-    assert.deepEqual(await v2Node.loadContent().then((buffer) => buffer.toString()), 'V2');
+    assert.deepEqual(
+      await pheme.storage.readContent(v2Node).then((buffer) => buffer.toString()),
+      'V2'
+    );
 
     await pheme
-      .replaceFromHandle(HANDLE, 'v1-uuid', Buffer.from('V1-NEW'), v1Node.block.meta)
+      .replaceFromHandle(
+        HANDLE,
+        'v1-uuid',
+        {
+          path: 'content.txt',
+          content: Buffer.from('V1-NEW'),
+        },
+        v1Node.block.meta
+      )
       .execute();
     const patchedChain = await pheme.loadHandle(HANDLE).execute();
 
@@ -164,8 +205,28 @@ contract('E2E Test', () => {
     assert(patchedChain[1].address.includes('block.json'));
     // ensure that the content is updated
     assert.deepEqual(
-      await patchedChain[1].loadContent().then((buffer) => buffer.toString()),
+      await pheme.storage.readContent(patchedChain[1]).then((buffer) => buffer.toString()),
       'V1-NEW'
     );
+  });
+
+  it('should be able to deal with assets', async () => {
+    await pheme.registry.setPointer(HANDLE, '').execute();
+    const testAsset = Buffer.from('TEST ASSET');
+    const testAssetAddress = await pheme.storage.writeData(testAsset);
+
+    const testContent = Buffer.from('TEST CONTENT');
+    await pheme
+      .pushToHandle(
+        HANDLE,
+        { path: 'content.txt', content: testContent },
+        {},
+        { 'test.txt': testAssetAddress }
+      )
+      .execute();
+
+    const [node] = await pheme.loadHandle(HANDLE).execute();
+    const loadedAsset = await pheme.storage.readAsset(node, 'test.txt');
+    assert.equal(testAsset.toString(), loadedAsset.toString());
   });
 });

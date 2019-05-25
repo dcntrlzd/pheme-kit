@@ -4,7 +4,10 @@ import axios from 'axios';
 
 import { PROTOCOL_PATTERN, V3_CONTENT_ADDRESS } from '../constants';
 import { Block } from '../types';
-import ChainNode from '../chain-node';
+import ChainNode from './chain-node';
+
+// TODO: Introduce a clas called container whcih takes care of directory wrapping etc.
+// TODO: Extend Container to Become ChainNode
 
 export interface DAGNode {
   data: Buffer;
@@ -16,7 +19,7 @@ export interface DAGNode {
 export interface IPFSFileReference {
   path: string;
   hash: string;
-  size: number;
+  size?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
@@ -25,8 +28,8 @@ export interface IPFSFileResponse {
   content: Buffer;
 }
 
-interface AssetMap {
-  [path: string]: Buffer;
+export interface AssetMap {
+  [path: string]: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
@@ -41,7 +44,7 @@ interface IPFSPeerInfo {
 type AvailableBlockVersions = 'v1' | 'v2' | 'v3';
 
 type WritableData = string | Buffer;
-interface WritableObject {
+export interface WritableObject {
   path: string;
   content: WritableData;
 }
@@ -120,6 +123,14 @@ export default class PhemeStorage {
     return Buffer.from(data);
   }
 
+  public readContent(node: ChainNode) {
+    return this.readData(node.getContentAddress());
+  }
+
+  public readAsset(node: ChainNode, path: string) {
+    return this.readData(node.getAssetAddress(path));
+  }
+
   public async store(writable: Writable, estimate: boolean = false) {
     return this.ipfs.add(writable, { onlyHash: estimate, wrapWithDirectory: true });
   }
@@ -145,7 +156,7 @@ export default class PhemeStorage {
     node: ChainNode,
     changes: {
       uuid?: string;
-      content?: Buffer;
+      content?: WritableObject;
       meta?: any;
       timestamp?: number;
       previous?: string;
@@ -154,30 +165,51 @@ export default class PhemeStorage {
   ): Promise<ChainNode> {
     let nodeToPatch: ChainNode;
     if (['v1', 'v2'].includes(node.blockVersion)) {
-      const root = await this.ipfs.object.new().then((cid) => cid.toString());
+      const root = await this.ipfs.object.new('unixfs-dir').then((cid) => cid.toString());
       const wrappedBlock = await this.ipfs.object.patch.addLink(root, {
         name: 'block.json',
-        cid: node.rootAddress,
+        cid: node.root,
       });
-      nodeToPatch = new ChainNode(this, `${wrappedBlock}/block.json`, node.block);
+      nodeToPatch = new ChainNode(`${wrappedBlock}/block.json`, node.block);
     } else {
       nodeToPatch = node;
     }
 
-    const { rootAddress, block } = nodeToPatch;
+    const { root: initialAddress, block: blockToPatch } = nodeToPatch;
     const { content, assets, ...blockPatch } = changes;
 
-    const { files, block: patchedBlock } = await this.storeBlock(
-      {
-        ...block,
-        ...blockPatch,
-      },
-      { content, assets }
-    );
+    let files = [];
+    let block = blockToPatch;
+
+    if (Object.keys(blockPatch).length > 0 || !!content) {
+      ({ files, block } = await this.storeBlock(
+        {
+          ...blockToPatch,
+          ...blockPatch,
+        },
+        content
+      ));
+    }
 
     const changesToApply = files.filter((item) => item.path !== '');
+    if (assets) {
+      try {
+        await this.ipfs.get(`${initialAddress}/assets`);
+      } catch (e) {
+        changesToApply.push({
+          path: 'assets',
+          hash: await this.ipfs.object.new('unixfs-dir').then((cid) => cid.toString()),
+        });
+      }
+      Object.keys(assets).forEach((key) => {
+        changesToApply.push({
+          path: `assets/${key}`,
+          hash: assets[key],
+        });
+      });
+    }
 
-    let patchedAddress = rootAddress;
+    let patchedAddress = initialAddress;
     for (const change of changesToApply) {
       const update = await this.ipfs.object.patch.addLink(patchedAddress, {
         name: change.path,
@@ -187,46 +219,34 @@ export default class PhemeStorage {
       patchedAddress = update.toString();
     }
 
-    return new ChainNode(this, `${patchedAddress}/block.json`, patchedBlock);
+    return new ChainNode(`${patchedAddress}/block.json`, block);
   }
 
   // TODO: Move to storage
   public async createNode(
     block: Block,
-    { content, assets = {} }: { content?: Buffer; assets?: AssetMap } = {}
+    { content, assets }: { content?: WritableObject; assets?: AssetMap } = {}
   ): Promise<ChainNode> {
-    const { files, block: savedBlock } = await this.storeBlock(block, { content, assets });
+    const { files, block: savedBlock } = await this.storeBlock(block, content);
     const root = files.find((item) => item.path === '');
+    const node = new ChainNode(`${root.hash}/block.json`, savedBlock);
 
-    return new ChainNode(this, `${root.hash}/block.json`, savedBlock);
+    return assets ? this.patchNode(node, { assets }) : node;
   }
 
   // TODO: Move to storage
-  private async storeBlock(
-    block: Block,
-    { content, assets = {} }: { content?: Buffer; assets?: AssetMap } = {}
-  ) {
+  private async storeBlock(block: Block, content?: WritableObject) {
     const blockToWrite = { ...block };
     const items = [];
 
     if (content) {
-      blockToWrite.address = V3_CONTENT_ADDRESS;
-      items.push({
-        path: 'content',
-        content,
-      });
+      blockToWrite.address = content.path;
+      items.push(content);
     }
 
     items.push({
       path: 'block.json',
       content: Buffer.from(JSON.stringify(blockToWrite)),
-    });
-
-    Object.keys(assets).forEach((key) => {
-      items.push({
-        path: `assets/${key}`,
-        content: assets[key],
-      });
     });
 
     return { files: await this.store(items), block: blockToWrite };

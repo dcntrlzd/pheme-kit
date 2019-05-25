@@ -1,11 +1,11 @@
 import { v4 as generateUuid } from 'uuid';
 
 import * as ethers from 'ethers';
-import Storage from './storage';
+import Storage, { WritableObject, AssetMap } from './storage';
 import Registry from './registry';
 
 import { Task, createTask, modifyTask } from './task';
-import ChainNode from './chain-node';
+import ChainNode from './storage/chain-node';
 import { Block } from './types';
 
 export default class Pheme {
@@ -48,12 +48,15 @@ export default class Pheme {
     });
   }
 
-  public updateHandleProfile(handle: string, profile: any): Task<string> {
+  public updateHandleProfile(handle: string, profile: any, assets?: AssetMap): Task<string> {
     return createTask({
       estimate: async () => {
         return this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate();
       },
       execute: async (context) => {
+        // load dir
+        // create dir if not there
+        // patch dir
         const profileAddress = await this.storage.writeObject(profile);
         await this.registry.setProfile(handle, profileAddress).execute(context);
         return profileAddress;
@@ -61,7 +64,12 @@ export default class Pheme {
     });
   }
 
-  public pushToHandle(handle: string, data: Buffer, meta: any = {}): Task<ChainNode> {
+  public pushToHandle(
+    handle: string,
+    content: WritableObject,
+    meta: any = {},
+    assets?: AssetMap
+  ): Task<ChainNode> {
     return createTask({
       estimate: () =>
         this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
@@ -76,7 +84,7 @@ export default class Pheme {
             meta,
             previous,
           },
-          { content: data }
+          { content, assets }
         );
 
         await this.registry.setPointer(handle, node.address).execute(context);
@@ -88,12 +96,14 @@ export default class Pheme {
   public replaceFromHandle(
     handle: string,
     uuid: string,
-    data: Buffer,
-    meta: any = {}
+    content: WritableObject,
+    meta: any = {},
+    assets?: AssetMap
   ): Task<ChainNode[]> {
     return this.modifyHandleBlock(handle, uuid, async (nodeToReplace) =>
       this.storage.patchNode(nodeToReplace, {
-        content: data,
+        content,
+        assets,
         meta,
       })
     );
@@ -116,7 +126,7 @@ export default class Pheme {
 
             do {
               const block: Block = await this.storage.readObject(cursor);
-              chain.push(new ChainNode(this.storage, cursor, block));
+              chain.push(new ChainNode(cursor, block));
               cursor = block.previous;
             } while (cursor);
 
