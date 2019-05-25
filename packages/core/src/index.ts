@@ -1,12 +1,31 @@
 import { v4 as generateUuid } from 'uuid';
 
 import * as ethers from 'ethers';
-import Storage, { WritableObject, AssetMap } from './storage';
+import Storage from './storage';
+import Container, { ContainerWritable, ContainerWritableContent } from './storage/container';
+import BlockWrapper from './storage/block-wrapper';
 import Registry from './registry';
 
 import { Task, createTask, modifyTask } from './task';
-import ChainNode from './storage/chain-node';
 import { Block } from './types';
+
+export interface AssetMap {
+  [path: string]: string;
+}
+
+const convertAssetMapToWritable = (assetMap: AssetMap = {}) =>
+  Object.keys(assetMap).reduce(
+    (acc, path) => {
+      return [
+        ...acc,
+        {
+          path,
+          hash: assetMap[path],
+        },
+      ];
+    },
+    [] as ContainerWritable[]
+  );
 
 export default class Pheme {
   public static create(config: {
@@ -49,15 +68,24 @@ export default class Pheme {
   }
 
   public updateHandleProfile(handle: string, profile: any, assets?: AssetMap): Task<string> {
+    const profileFilename = 'profile.json';
+
+    const profileFile: ContainerWritable = {
+      path: profileFilename,
+      content: Buffer.from(Storage.serialize(profile)),
+    };
+
+    const files = [...convertAssetMapToWritable(assets), profileFile];
+
     return createTask({
       estimate: async () => {
-        return this.registry.setProfile(handle, this.storage.addressForEstimation()).estimate();
+        const container = await Container.create(this.storage.toWrite, files, true);
+        const profileAddress = container.resolve(profileFilename);
+        return this.registry.setProfile(handle, profileAddress).estimate();
       },
       execute: async (context) => {
-        // load dir
-        // create dir if not there
-        // patch dir
-        const profileAddress = await this.storage.writeObject(profile);
+        const container = await Container.create(this.storage.toWrite, files);
+        const profileAddress = container.resolve(profileFilename);
         await this.registry.setProfile(handle, profileAddress).execute(context);
         return profileAddress;
       },
@@ -66,29 +94,42 @@ export default class Pheme {
 
   public pushToHandle(
     handle: string,
-    content: WritableObject,
+    content: ContainerWritableContent,
     meta: any = {},
     assets?: AssetMap
-  ): Task<ChainNode> {
+  ): Task<BlockWrapper> {
     return createTask({
-      estimate: () =>
-        this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
-      execute: async (context) => {
-        const previous = await this.registry.getPointer(handle).execute();
-
-        const node = await this.storage.createNode(
+      estimate: async () => {
+        const blockWrapper = await BlockWrapper.create(
+          this.storage.toWrite,
           {
             uuid: generateUuid(),
-            address: '',
+            address: content.path,
+            timestamp: Date.now(),
+            meta,
+            previous: '',
+          },
+          [...convertAssetMapToWritable(assets), content],
+          true
+        );
+        return this.registry.setPointer(handle, blockWrapper.address).estimate();
+      },
+      execute: async (context) => {
+        const previous = await this.registry.getPointer(handle).execute();
+        const blockWrapper = await BlockWrapper.create(
+          this.storage.toWrite,
+          {
+            uuid: generateUuid(),
+            address: content.path,
             timestamp: Date.now(),
             meta,
             previous,
           },
-          { content, assets }
+          [...convertAssetMapToWritable(assets), content]
         );
 
-        await this.registry.setPointer(handle, node.address).execute(context);
-        return node;
+        await this.registry.setPointer(handle, blockWrapper.address).execute(context);
+        return blockWrapper;
       },
     });
   }
@@ -96,38 +137,36 @@ export default class Pheme {
   public replaceFromHandle(
     handle: string,
     uuid: string,
-    content: WritableObject,
+    content: ContainerWritableContent,
     meta: any = {},
     assets?: AssetMap
-  ): Task<ChainNode[]> {
-    return this.modifyHandleBlock(handle, uuid, async (nodeToReplace) =>
-      this.storage.patchNode(nodeToReplace, {
-        content,
-        assets,
-        meta,
-      })
-    );
+  ): Task<BlockWrapper[]> {
+    return this.modifyHandleBlock(handle, uuid, async (blockWrapper) => {
+      const blockPatch: Partial<Block> = { meta, address: content.path };
+      const files = [...convertAssetMapToWritable(assets), content];
+      return blockWrapper.patch(blockPatch, files);
+    });
   }
 
-  public removeFromHandle(handle: string, uuid: string): Task<ChainNode[]> {
+  public removeFromHandle(handle: string, uuid: string): Task<BlockWrapper[]> {
     return this.modifyHandleBlock(handle, uuid, () => undefined);
   }
 
-  public loadHandle(handle: string): Task<ChainNode[]> {
+  public loadHandle(handle: string): Task<BlockWrapper[]> {
     const task = this.registry.getPointer(handle);
     return modifyTask(task, {
       execute: () =>
         task.execute().then(
-          async (address: string): Promise<ChainNode[]> => {
-            const chain: ChainNode[] = [];
+          async (address: string): Promise<BlockWrapper[]> => {
+            const chain: BlockWrapper[] = [];
             if (!address) return [];
 
             let cursor = address;
 
             do {
-              const block: Block = await this.storage.readObject(cursor);
-              chain.push(new ChainNode(cursor, block));
-              cursor = block.previous;
+              const blockWrapper = await BlockWrapper.load(this.storage.toRead, cursor);
+              chain.push(blockWrapper);
+              cursor = blockWrapper.block.previous;
             } while (cursor);
 
             return chain;
@@ -139,44 +178,45 @@ export default class Pheme {
   private modifyHandleBlock(
     handle: string,
     uuid: string,
-    modify: (node: ChainNode) => Promise<ChainNode>
-  ): Task<ChainNode[]> {
+    modify: (blockWrapper: BlockWrapper) => Promise<BlockWrapper>
+  ): Task<BlockWrapper[]> {
     return createTask({
-      estimate: () =>
-        this.registry.setPointer(handle, this.storage.addressForEstimation()).estimate(),
+      estimate: () => this.registry.setPointer(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
-        const modifiedChain: ChainNode[] = [];
-        const rewrite: ChainNode[] = [];
+        const modifiedChain: BlockWrapper[] = [];
+        const rewrite: BlockWrapper[] = [];
         const currentChain = await this.loadHandle(handle).execute();
 
-        let nodeToModify: ChainNode;
-        currentChain.forEach((node) => {
-          if (node.block.uuid === uuid) {
-            nodeToModify = node;
-          } else if (!nodeToModify) {
-            rewrite.push(node);
+        let blockWrapperToModify: BlockWrapper;
+        currentChain.forEach((blockWrapper) => {
+          if (blockWrapper.block.uuid === uuid) {
+            blockWrapperToModify = blockWrapper;
+          } else if (!blockWrapperToModify) {
+            rewrite.push(blockWrapper);
           } else {
-            modifiedChain.push(node);
+            modifiedChain.push(blockWrapper);
           }
         });
 
-        if (!nodeToModify) throw new Error(`${handle} handle does not need modification`);
+        if (!blockWrapperToModify) throw new Error(`${handle} handle does not need modification`);
 
-        let pointer = nodeToModify.previous;
-        const modifiedNode = await modify(nodeToModify);
+        let pointer = blockWrapperToModify.block.previous;
+        const modifiedBlockWrapper = await modify(
+          blockWrapperToModify.withIpfs(this.storage.toWrite)
+        );
 
-        if (modifiedNode) {
-          pointer = modifiedNode.address;
-          modifiedChain.unshift(modifiedNode);
+        if (modifiedBlockWrapper) {
+          pointer = modifiedBlockWrapper.address;
+          modifiedChain.unshift(modifiedBlockWrapper);
         }
 
         while (rewrite.length > 0) {
-          const nodeToRewrite = rewrite.pop();
-          const patchedNode = await this.storage.patchNode(nodeToRewrite, {
-            previous: pointer,
-          });
-          pointer = patchedNode.address;
-          modifiedChain.unshift(patchedNode);
+          const blockWrapperToRewrite = rewrite.pop();
+          const rewrittenBlockWrapper = await blockWrapperToRewrite
+            .withIpfs(this.storage.toWrite)
+            .patch({ previous: pointer });
+          pointer = rewrittenBlockWrapper.address;
+          modifiedChain.unshift(rewrittenBlockWrapper);
         }
 
         await this.registry.setPointer(handle, pointer).execute(context);
