@@ -13,7 +13,7 @@
   "env": {
     "mocha": true,
     "jest": true,
-    "node": true,
+    "node": true
   },
   "globals": {
     "web3": true,
@@ -22,7 +22,7 @@
   },
   "settings": {
     "import/resolver": {
-      "typescript": {},
+      "typescript": {}
     }
   },
   "rules": {

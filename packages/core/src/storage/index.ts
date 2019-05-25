@@ -41,8 +41,6 @@ interface IPFSPeerInfo {
   streams?: string[];
 }
 
-type AvailableBlockVersions = 'v1' | 'v2' | 'v3';
-
 type WritableData = string | Buffer;
 export interface WritableObject {
   path: string;
@@ -87,6 +85,10 @@ export default class PhemeStorage {
   public readonly gateway: IPFSClient;
 
   public readonly gatewayUrl: string;
+
+  private static BLOCK_FILENAME = 'block.json';
+
+  private static ASSETS_DIRECTORY = 'assets';
 
   public constructor(rpcUrl: string, gatewayUrl?: string) {
     this.gatewayUrl = gatewayUrl || rpcUrl;
@@ -167,10 +169,10 @@ export default class PhemeStorage {
     if (['v1', 'v2'].includes(node.blockVersion)) {
       const root = await this.ipfs.object.new('unixfs-dir').then((cid) => cid.toString());
       const wrappedBlock = await this.ipfs.object.patch.addLink(root, {
-        name: 'block.json',
+        name: PhemeStorage.BLOCK_FILENAME,
         cid: node.root,
       });
-      nodeToPatch = new ChainNode(`${wrappedBlock}/block.json`, node.block);
+      nodeToPatch = new ChainNode(`${wrappedBlock}/${PhemeStorage.BLOCK_FILENAME}`, node.block);
     } else {
       nodeToPatch = node;
     }
@@ -194,16 +196,16 @@ export default class PhemeStorage {
     const changesToApply = files.filter((item) => item.path !== '');
     if (assets) {
       try {
-        await this.ipfs.get(`${initialAddress}/assets`);
+        await this.ipfs.get(`${initialAddress}/${PhemeStorage.ASSETS_DIRECTORY}`);
       } catch (e) {
         changesToApply.push({
-          path: 'assets',
+          path: PhemeStorage.ASSETS_DIRECTORY,
           hash: await this.ipfs.object.new('unixfs-dir').then((cid) => cid.toString()),
         });
       }
       Object.keys(assets).forEach((key) => {
         changesToApply.push({
-          path: `assets/${key}`,
+          path: `${PhemeStorage.ASSETS_DIRECTORY}/${key}`,
           hash: assets[key],
         });
       });
@@ -219,7 +221,7 @@ export default class PhemeStorage {
       patchedAddress = update.toString();
     }
 
-    return new ChainNode(`${patchedAddress}/block.json`, block);
+    return new ChainNode(`${patchedAddress}/${PhemeStorage.BLOCK_FILENAME}`, block);
   }
 
   // TODO: Move to storage
@@ -229,7 +231,7 @@ export default class PhemeStorage {
   ): Promise<ChainNode> {
     const { files, block: savedBlock } = await this.storeBlock(block, content);
     const root = files.find((item) => item.path === '');
-    const node = new ChainNode(`${root.hash}/block.json`, savedBlock);
+    const node = new ChainNode(`${root.hash}/${PhemeStorage.BLOCK_FILENAME}`, savedBlock);
 
     return assets ? this.patchNode(node, { assets }) : node;
   }
@@ -245,7 +247,7 @@ export default class PhemeStorage {
     }
 
     items.push({
-      path: 'block.json',
+      path: PhemeStorage.BLOCK_FILENAME,
       content: Buffer.from(JSON.stringify(blockToWrite)),
     });
 
