@@ -11,7 +11,7 @@
     "@types/uuid": "^3.4.3",
     "bn.js": "^4.11.8",
     "go-ipfs-dep": "^0.4.19",
-    "ipfsd-ctl": "^0.40.0",
+    "ipfsd-ctl": "^0.42.3",
     "jest": "^24.7.1",
     "lerna": "^3.13.1",
     "prettier": "^1.16.4",
