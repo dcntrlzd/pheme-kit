@@ -39,7 +39,8 @@
     "bootstrap": "lerna bootstrap",
     "ci:prepare": "yarn cleanup && yarn build-artifacts",
     "ci:test": "jest && lerna run test",
-    "ci:check": "eslint '{packages,e2e}/**/*.{js,ts}'"
+    "ci:check": "eslint '{packages,e2e}/**/*.{js,ts}'",
+    "ci": "yarn ci:prepare && yarn ci:check && yarn ci:test",
     "tsc": "lerna exec tsc --",
     "build-artifacts": "lerna run build-artifacts",
     "build": "lerna run prepack --ignore e2e",
