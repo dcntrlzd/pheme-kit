@@ -1,8 +1,8 @@
 import * as ethers from 'ethers';
-import Pheme from './index';
-import { Task, modifyTask, createTask } from './task';
+import Pheme from '../pheme';
+import { Task, modifyTask, createTask } from '../task';
 
-jest.mock('./registry', () => jest.requireActual('./test/registry'));
+jest.mock('../registry', () => jest.requireActual('./mocks/registry'));
 
 const buildContentFile = (content: string) => ({
   path: 'content.txt',
@@ -48,7 +48,7 @@ describe('Core', () => {
       providerOrSigner: undefined,
       contractAddress: undefined,
       ipfsGatewayUrl: process.env.IPFS_GATEWAY_URL,
-      ipfsRpcUrl: process.env.IPFS_RPC_URL,
+      ipfsApiUrl: process.env.IPFS_API_URL,
     });
   });
 
@@ -160,9 +160,9 @@ describe('Core', () => {
 
       expect(newChain).toHaveLength(3);
       expect(newChain[0].address).not.toBe(oldAddress);
-      const newBlockWrapper = newChain[1];
-      expect(newBlockWrapper.block.meta.title).toBe(newContent);
-      expect((await core.storage.read(newBlockWrapper.contentAddress)).toString()).toBe(newContent);
+      const newWrappedBlock = newChain[1];
+      expect(newWrappedBlock.block.meta.title).toBe(newContent);
+      expect((await core.storage.read(newWrappedBlock.contentAddress)).toString()).toBe(newContent);
     });
   });
 
@@ -184,7 +184,7 @@ describe('Core', () => {
 
         const chain = await core.loadHandle('test').execute();
         expect(chain.length).toBe(0);
-        expect(chain.map((blockWrapper) => blockWrapper.block.meta.title)).toEqual([]);
+        expect(chain.map((wrappedBlock) => wrappedBlock.block.meta.title)).toEqual([]);
       });
     });
 

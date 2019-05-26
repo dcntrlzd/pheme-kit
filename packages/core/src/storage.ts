@@ -2,8 +2,8 @@ import * as URL from 'url';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 
-import { PROTOCOL_PATTERN } from '../constants';
-import { IPFSClient } from '../types';
+import { PROTOCOL_PATTERN } from './constants';
+import { IPFSClient } from './types';
 
 export const stripProtocol = (url: string) => {
   return url.replace(PROTOCOL_PATTERN, '');
@@ -21,24 +21,18 @@ export const buildIPFSInstaceFromUrl = (url: string): IPFSClient => {
   return IPFS(uri.hostname, port, { protocol }) as IPFSClient;
 };
 
-export default class PhemeStorage {
-  public readonly ipfs: IPFSClient;
+export default class Storage {
+  public readonly writer: IPFSClient;
 
-  public readonly toWrite: IPFSClient;
-
-  public readonly toRead: IPFSClient;
+  public readonly reader: IPFSClient;
 
   public readonly gatewayUrl: string;
 
-  private static CONTENT_FILENAME = 'content';
+  public constructor(apiUrl: string, gatewayUrl?: string) {
+    this.gatewayUrl = gatewayUrl || apiUrl;
 
-  private static ASSETS_DIRECTORY = 'assets';
-
-  public constructor(rpcUrl: string, gatewayUrl?: string) {
-    this.gatewayUrl = gatewayUrl || rpcUrl;
-
-    this.toWrite = buildIPFSInstaceFromUrl(rpcUrl);
-    this.toRead = buildIPFSInstaceFromUrl(this.gatewayUrl);
+    this.writer = buildIPFSInstaceFromUrl(apiUrl);
+    this.reader = buildIPFSInstaceFromUrl(this.gatewayUrl);
   }
 
   public static addressForEstimation() {
@@ -72,16 +66,16 @@ export default class PhemeStorage {
   }
 
   public async write(data: any, onlyHash: boolean = false) {
-    const [{ hash }] = await this.toWrite.add(data, { onlyHash, recursive: true });
+    const [{ hash }] = await this.writer.add(data, { onlyHash, recursive: true });
     return hash;
   }
 
   public async readObject(address: string): Promise<any> {
     const data = await this.read(address);
-    return PhemeStorage.deserialize(data.toString());
+    return Storage.deserialize(data.toString());
   }
 
   public async writeObject(object: any, onlyHash: boolean = false): Promise<string> {
-    return this.write(Buffer.from(PhemeStorage.serialize(object)), onlyHash);
+    return this.write(Buffer.from(Storage.serialize(object)), onlyHash);
   }
 }

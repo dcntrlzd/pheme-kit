@@ -15,10 +15,7 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "lib/index.*",
-    "lib/storage-proxy/index.*",
-    "lib/registry/index.*",
-    "lib/task/index.*"
+    "lib/**/*"
   ],
   "scripts": {
     "prepack": "tsc",

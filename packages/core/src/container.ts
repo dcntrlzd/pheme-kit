@@ -1,11 +1,11 @@
-import { IPFSFileReference } from '../../types';
+import { IPFSFileReference, IPFSRestrictedClient } from './types';
 
-type WriableData = Buffer;
-type WritableLink = string;
+export type WritableContent = Buffer;
+export type WritableLink = string;
 
 export interface ContainerWritableContent {
   path: string;
-  content: WriableData;
+  content: WritableContent;
 }
 
 export interface ContainerWritableLink {
@@ -20,24 +20,23 @@ export default class Container {
 
   public static readonly SEPARATOR = '/';
 
-  public static readonly EMPTY_FILENAME = '.empty';
-
   public readonly items: IPFSFileReference[];
 
-  public readonly ipfs: any;
+  public readonly ipfs: IPFSRestrictedClient;
 
-  protected static getDirname = (path: string) => {
-    const parts = path.split(Container.SEPARATOR);
-    parts.pop();
-    return parts.join(Container.SEPARATOR);
+  public static getDirname = (path: string) => {
+    const sections = path.split(Container.SEPARATOR);
+    sections.pop();
+    return sections.filter((part) => part !== '').join(Container.SEPARATOR);
   };
 
   public static resolve(address: string, path: string) {
-    return [address, path].join(Container.SEPARATOR);
+    const sections = path.split(Container.SEPARATOR).filter((part) => part !== '');
+    return [address, ...sections].join(Container.SEPARATOR);
   }
 
   public static async create(
-    ipfs: any,
+    ipfs: IPFSRestrictedClient,
     contents: ContainerWritable[],
     onlyHash = false
   ): Promise<Container> {
@@ -58,20 +57,16 @@ export default class Container {
     const directoriesToInitialize = linkDirectories.filter(
       (path) => !contentDirectories.includes(path)
     );
-    // TODO: optimize it initialize only the deepest directories
 
-    const emptyFile = Buffer.from('');
+    const directoryContent = Buffer.from('');
 
-    const filesToAdd = [
+    const filesToAdd: ContainerWritableContent[] = [
       ...writableContents,
       ...directoriesToInitialize.map((path) => ({
-        path: [path, Container.EMPTY_FILENAME].join(Container.SEPARATOR),
-        data: emptyFile,
+        path,
+        content: directoryContent,
       })),
     ];
-
-    if (!writableContents.length)
-      filesToAdd.push({ path: Container.EMPTY_FILENAME, data: emptyFile });
 
     const allItems: IPFSFileReference[] = await ipfs.add(filesToAdd, {
       onlyHash,
@@ -96,9 +91,34 @@ export default class Container {
     return Container.load(ipfs, address);
   }
 
-  public static async load(ipfs: any, address: string): Promise<Container> {
-    const items = await ipfs.ls(address);
-    return new Container(ipfs, address, items.map(({ path, hash }) => ({ path, hash })));
+  public static async load(ipfs: IPFSRestrictedClient, address: string): Promise<Container> {
+    const listDirectory = async (path: string, depthLimit = 5) => {
+      // TODO: refactor to use object.get and traverse all links (infura rpc limitation)
+      const items: IPFSFileReference[] = await ipfs.ls(path);
+      const directories = items.filter((item) => item.type === 'dir');
+      const files = items.filter((item) => !directories.includes(item));
+
+      if (depthLimit > 0) {
+        for (const directory of directories) {
+          const replacement = await listDirectory(`${path}/${directory.name}`, depthLimit - 1);
+          files.push(...replacement);
+        }
+      }
+
+      return files;
+    };
+
+    const items = await listDirectory(address);
+    const root = [address, Container.SEPARATOR].join('');
+
+    return new Container(
+      ipfs,
+      address,
+      items.map(({ path, hash }) => ({
+        path: path.replace(root, ''),
+        hash,
+      }))
+    );
   }
 
   private constructor(ipfs: any, address: string, items: IPFSFileReference[]) {
@@ -113,11 +133,9 @@ export default class Container {
 
   public patch(updates: ContainerWritable[], onlyHash = false) {
     const changeMap: { [path: string]: ContainerWritable } = {};
-    const rootPath = this.resolve('');
 
     this.items.forEach((writable) => {
-      const path = writable.path.replace(rootPath, '');
-      changeMap[path] = { ...writable, path };
+      changeMap[writable.path] = writable;
     });
 
     updates.forEach((writable) => {

@@ -27,6 +27,8 @@ export interface IPFSFileReference {
   path: string;
   hash: string;
   size?: number;
+  name?: string;
+  type?: string;
 }
 
 export interface IPFSFileResponse {
@@ -42,7 +44,10 @@ interface IPFSPeerInfo {
   streams?: string[];
 }
 
-type IPFSWritableData = string | Buffer;
+type IPFSWritableData = Buffer;
+
+type IPFSBlock = any;
+type CID = any;
 
 export interface IPFSWritableObject {
   path: string;
@@ -51,7 +56,53 @@ export interface IPFSWritableObject {
 
 export type IPFSWritable = IPFSWritableData | IPFSWritableObject | IPFSWritableObject[];
 
-export interface IPFSClient {
+// TODO: Limit to infura methods
+export interface IPFSRestrictedClient {
+  block: {
+    get: (cid: CID) => Promise<IPFSBlock>;
+    stat: (cid: CID) => Promise<{ key: string; size: number }>;
+  };
+  cat: (ipfsPath: string, options?: { offset?: number; length?: number }) => Promise<Buffer>;
+  dag: {
+    get: (
+      cid: CID,
+      path?: string,
+      options?: { localResolve?: boolean }
+    ) => Promise<{ value: Buffer; remainderPath: string }>;
+  };
+  get: (ipfsPath: string) => Promise<IPFSFileResponse[]>;
+  object: {
+    data: (multihash: string, options?: { enc?: string }) => Promise<Buffer>;
+    get: (multihash: string, options?: { enc?: string }) => Promise<DAGNode>;
+    stat: (
+      multihash: string,
+      options?: { enc?: string }
+    ) => Promise<{
+      Hash: string;
+      NumLinks: number;
+      BlockSize: number;
+      LinksSize: number;
+      DataSize: number;
+      CumulativeSize: number;
+    }>;
+  };
+  add: (
+    data: IPFSWritable,
+    options?: {
+      progress?: (progress: number) => any;
+      recursive?: boolean;
+      hashAlg?: string;
+      wrapWithDirectory?: boolean;
+      onlyHash?: boolean;
+      pin?: boolean;
+      chunker?: string;
+      'cid-version'?: number;
+      'raw-leaves'?: boolean;
+    }
+  ) => Promise<IPFSFileReference[]>;
+}
+
+export interface IPFSClient extends IPFSRestrictedClient {
   swarm: {
     peers: (opts?: { verbose: boolean }) => Promise<IPFSPeerInfo[]>;
   };
@@ -60,8 +111,5 @@ export interface IPFSClient {
     ls: (hash?: string, options?: any) => Promise<{ hash: string; type: string }[]>;
     rm: (hash, options?: any) => Promise<void>;
   };
-  object: any; // TODO: fill
-  add: (object: IPFSWritable, options?: any) => Promise<IPFSFileReference[]>;
-  get: (hash: string) => Promise<IPFSFileResponse[]>;
   ls: (hash: string) => Promise<IPFSFileReference[]>;
 }
