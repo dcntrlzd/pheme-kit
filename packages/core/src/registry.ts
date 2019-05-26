@@ -1,6 +1,6 @@
 import * as ethers from 'ethers';
 import RegistryAbi from '@pheme-kit/ethereum/artifacts/abi/RegistryV1.json';
-import { modifyTask, createTaskFromContractMethod, Task } from '../task';
+import { modifyTask, createTaskFromContractMethod, Task } from './task';
 
 const stringToBytes = (input: string) => ethers.utils.formatBytes32String(input);
 

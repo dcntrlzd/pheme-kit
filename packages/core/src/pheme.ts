@@ -2,8 +2,8 @@ import { v4 as generateUuid } from 'uuid';
 
 import * as ethers from 'ethers';
 import Storage from './storage';
-import Container, { ContainerWritable, ContainerWritableContent } from './storage/container';
-import BlockWrapper from './storage/block-wrapper';
+import Container, { ContainerWritable, ContainerWritableContent } from './container';
+import WrappedBlock from './wrapped-block';
 import Registry from './registry';
 
 import { Task, createTask, modifyTask } from './task';
@@ -94,13 +94,13 @@ export default class Pheme {
     content: ContainerWritableContent,
     meta: any = {},
     assets?: AssetMap
-  ): Task<BlockWrapper> {
+  ): Task<WrappedBlock> {
     return createTask({
       estimate: async () =>
         this.registry.setPointer(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const previous = await this.registry.getPointer(handle).execute();
-        const blockWrapper = await BlockWrapper.create(
+        const wrappedBlock = await WrappedBlock.create(
           this.storage.toWrite,
           {
             uuid: generateUuid(),
@@ -112,8 +112,8 @@ export default class Pheme {
           [...convertAssetMapToWritable(assets), content]
         );
 
-        await this.registry.setPointer(handle, blockWrapper.address).execute(context);
-        return blockWrapper;
+        await this.registry.setPointer(handle, wrappedBlock.address).execute(context);
+        return wrappedBlock;
       },
     });
   }
@@ -124,33 +124,33 @@ export default class Pheme {
     content: ContainerWritableContent,
     meta: any = {},
     assets?: AssetMap
-  ): Task<BlockWrapper[]> {
-    return this.modifyHandleBlock(handle, uuid, async (blockWrapper) => {
+  ): Task<WrappedBlock[]> {
+    return this.modifyHandleBlock(handle, uuid, async (wrappedBlock) => {
       const blockPatch: Partial<Block> = { meta, address: content.path };
       const files = [...convertAssetMapToWritable(assets), content];
-      return blockWrapper.patch(this.storage.toWrite, blockPatch, files);
+      return wrappedBlock.patch(this.storage.toWrite, blockPatch, files);
     });
   }
 
-  public removeFromHandle(handle: string, uuid: string): Task<BlockWrapper[]> {
+  public removeFromHandle(handle: string, uuid: string): Task<WrappedBlock[]> {
     return this.modifyHandleBlock(handle, uuid, () => undefined);
   }
 
-  public loadHandle(handle: string): Task<BlockWrapper[]> {
+  public loadHandle(handle: string): Task<WrappedBlock[]> {
     const task = this.registry.getPointer(handle);
     return modifyTask(task, {
       execute: () =>
         task.execute().then(
-          async (address: string): Promise<BlockWrapper[]> => {
-            const chain: BlockWrapper[] = [];
+          async (address: string): Promise<WrappedBlock[]> => {
+            const chain: WrappedBlock[] = [];
             if (!address) return [];
 
             let cursor = address;
 
             do {
-              const blockWrapper = await BlockWrapper.load(this.storage.toRead, cursor);
-              chain.push(blockWrapper);
-              cursor = blockWrapper.block.previous;
+              const wrappedBlock = await WrappedBlock.load(this.storage.toRead, cursor);
+              chain.push(wrappedBlock);
+              cursor = wrappedBlock.block.previous;
             } while (cursor);
 
             return chain;
@@ -162,43 +162,43 @@ export default class Pheme {
   private modifyHandleBlock(
     handle: string,
     uuid: string,
-    modify: (blockWrapper: BlockWrapper) => Promise<BlockWrapper>
-  ): Task<BlockWrapper[]> {
+    modify: (wrappedBlock: WrappedBlock) => Promise<WrappedBlock>
+  ): Task<WrappedBlock[]> {
     return createTask({
       estimate: () => this.registry.setPointer(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
-        const modifiedChain: BlockWrapper[] = [];
-        const rewrite: BlockWrapper[] = [];
+        const modifiedChain: WrappedBlock[] = [];
+        const rewrite: WrappedBlock[] = [];
         const currentChain = await this.loadHandle(handle).execute();
 
-        let blockWrapperToModify: BlockWrapper;
-        currentChain.forEach((blockWrapper) => {
-          if (blockWrapper.block.uuid === uuid) {
-            blockWrapperToModify = blockWrapper;
-          } else if (!blockWrapperToModify) {
-            rewrite.push(blockWrapper);
+        let wrappedBlockToModify: WrappedBlock;
+        currentChain.forEach((wrappedBlock) => {
+          if (wrappedBlock.block.uuid === uuid) {
+            wrappedBlockToModify = wrappedBlock;
+          } else if (!wrappedBlockToModify) {
+            rewrite.push(wrappedBlock);
           } else {
-            modifiedChain.push(blockWrapper);
+            modifiedChain.push(wrappedBlock);
           }
         });
 
-        if (!blockWrapperToModify) throw new Error(`${handle} handle does not need modification`);
+        if (!wrappedBlockToModify) throw new Error(`${handle} handle does not need modification`);
 
-        let pointer = blockWrapperToModify.block.previous;
-        const modifiedBlockWrapper = await modify(blockWrapperToModify);
+        let pointer = wrappedBlockToModify.block.previous;
+        const modifiedwrappedBlock = await modify(wrappedBlockToModify);
 
-        if (modifiedBlockWrapper) {
-          pointer = modifiedBlockWrapper.address;
-          modifiedChain.unshift(modifiedBlockWrapper);
+        if (modifiedwrappedBlock) {
+          pointer = modifiedwrappedBlock.address;
+          modifiedChain.unshift(modifiedwrappedBlock);
         }
 
         while (rewrite.length > 0) {
-          const blockWrapperToRewrite = rewrite.pop();
-          const rewrittenBlockWrapper = await blockWrapperToRewrite.patch(this.storage.toWrite, {
+          const wrappedBlockToRewrite = rewrite.pop();
+          const rewrittenwrappedBlock = await wrappedBlockToRewrite.patch(this.storage.toWrite, {
             previous: pointer,
           });
-          pointer = rewrittenBlockWrapper.address;
-          modifiedChain.unshift(rewrittenBlockWrapper);
+          pointer = rewrittenwrappedBlock.address;
+          modifiedChain.unshift(rewrittenwrappedBlock);
         }
 
         await this.registry.setPointer(handle, pointer).execute(context);

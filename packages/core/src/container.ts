@@ -1,4 +1,4 @@
-import { IPFSFileReference } from '../../types';
+import { IPFSFileReference } from './types';
 
 export type WritableContent = Buffer;
 export type WritableLink = string;

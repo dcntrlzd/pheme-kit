@@ -1,4 +1,4 @@
-import { detectBlockVersion } from './index';
+import { detectBlockVersion } from '../wrapped-block';
 
 describe('detectBlockVersion', () => {
   it('should be able to detect v1 addresses', () => {

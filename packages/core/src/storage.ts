@@ -2,8 +2,8 @@ import * as URL from 'url';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 
-import { PROTOCOL_PATTERN } from '../constants';
-import { IPFSClient } from '../types';
+import { PROTOCOL_PATTERN } from './constants';
+import { IPFSClient } from './types';
 
 export const stripProtocol = (url: string) => {
   return url.replace(PROTOCOL_PATTERN, '');

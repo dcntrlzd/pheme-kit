@@ -1,4 +1,4 @@
-import Pheme from './lib';
+import Pheme from './lib/pheme';
 
-export * from './lib';
+export * from './lib/pheme';
 export default Pheme;

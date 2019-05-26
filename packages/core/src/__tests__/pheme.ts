@@ -1,8 +1,8 @@
 import * as ethers from 'ethers';
-import Pheme from './index';
-import { Task, modifyTask, createTask } from './task';
+import Pheme from '../pheme';
+import { Task, modifyTask, createTask } from '../task';
 
-jest.mock('./registry', () => jest.requireActual('./test/registry'));
+jest.mock('../registry', () => jest.requireActual('./mocks/registry'));
 
 const buildContentFile = (content: string) => ({
   path: 'content.txt',

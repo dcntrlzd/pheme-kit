@@ -1,4 +1,4 @@
-import { createTask } from '../task';
+import { createTask } from '../../task';
 
 const mockTask = <T, M>(fn: (...fnArgs: any) => Promise<T>) => (...args: any) =>
   createTask<T>({ execute: () => fn(...args) });

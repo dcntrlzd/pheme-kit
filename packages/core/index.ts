@@ -1,4 +1,4 @@
-import Pheme from './src';
+import Pheme from './src/pheme';
 
-export * from './src';
+export * from './src/pheme';
 export default Pheme;

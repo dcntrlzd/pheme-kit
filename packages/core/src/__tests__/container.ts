@@ -1,5 +1,5 @@
-import Container, { WritableContent, WritableLink } from './index';
-import { buildIPFSInstaceFromUrl } from '../index';
+import Container, { WritableContent, WritableLink } from '../container';
+import { buildIPFSInstaceFromUrl } from '../storage';
 
 describe('Container', () => {
   const ipfs = buildIPFSInstaceFromUrl(process.env.IPFS_RPC_URL);
