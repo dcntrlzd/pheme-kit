@@ -81,7 +81,7 @@ export default class Pheme {
       estimate: async () =>
         this.registry.setProfile(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
-        const container = await Container.create(this.storage.toWrite, files);
+        const container = await Container.create(this.storage.writer, files);
         const profileAddress = container.resolve(profileFilename);
         await this.registry.setProfile(handle, profileAddress).execute(context);
         return profileAddress;
@@ -101,7 +101,7 @@ export default class Pheme {
       execute: async (context) => {
         const previous = await this.registry.getPointer(handle).execute();
         const wrappedBlock = await WrappedBlock.create(
-          this.storage.toWrite,
+          this.storage,
           {
             uuid: generateUuid(),
             address: content.path,
@@ -128,7 +128,7 @@ export default class Pheme {
     return this.modifyHandleBlock(handle, uuid, async (wrappedBlock) => {
       const blockPatch: Partial<Block> = { meta, address: content.path };
       const files = [...convertAssetMapToWritable(assets), content];
-      return wrappedBlock.patch(this.storage.toWrite, blockPatch, files);
+      return wrappedBlock.patch(this.storage, blockPatch, files);
     });
   }
 
@@ -148,7 +148,7 @@ export default class Pheme {
             let cursor = address;
 
             do {
-              const wrappedBlock = await WrappedBlock.load(this.storage.toRead, cursor);
+              const wrappedBlock = await WrappedBlock.load(this.storage, cursor);
               chain.push(wrappedBlock);
               cursor = wrappedBlock.block.previous;
             } while (cursor);
@@ -194,7 +194,7 @@ export default class Pheme {
 
         while (rewrite.length > 0) {
           const wrappedBlockToRewrite = rewrite.pop();
-          const rewrittenwrappedBlock = await wrappedBlockToRewrite.patch(this.storage.toWrite, {
+          const rewrittenwrappedBlock = await wrappedBlockToRewrite.patch(this.storage, {
             previous: pointer,
           });
           pointer = rewrittenwrappedBlock.address;

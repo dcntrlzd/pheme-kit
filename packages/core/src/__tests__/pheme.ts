@@ -160,9 +160,9 @@ describe('Core', () => {
 
       expect(newChain).toHaveLength(3);
       expect(newChain[0].address).not.toBe(oldAddress);
-      const newBlockWrapper = newChain[1];
-      expect(newBlockWrapper.block.meta.title).toBe(newContent);
-      expect((await core.storage.read(newBlockWrapper.contentAddress)).toString()).toBe(newContent);
+      const newWrappedBlock = newChain[1];
+      expect(newWrappedBlock.block.meta.title).toBe(newContent);
+      expect((await core.storage.read(newWrappedBlock.contentAddress)).toString()).toBe(newContent);
     });
   });
 
@@ -184,7 +184,7 @@ describe('Core', () => {
 
         const chain = await core.loadHandle('test').execute();
         expect(chain.length).toBe(0);
-        expect(chain.map((blockWrapper) => blockWrapper.block.meta.title)).toEqual([]);
+        expect(chain.map((wrappedBlock) => wrappedBlock.block.meta.title)).toEqual([]);
       });
     });
 
