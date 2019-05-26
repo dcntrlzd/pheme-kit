@@ -78,11 +78,8 @@ export default class Pheme {
     const files = [...convertAssetMapToWritable(assets), profileFile];
 
     return createTask({
-      estimate: async () => {
-        const container = await Container.create(this.storage.toWrite, files, true);
-        const profileAddress = container.resolve(profileFilename);
-        return this.registry.setProfile(handle, profileAddress).estimate();
-      },
+      estimate: async () =>
+        this.registry.setProfile(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const container = await Container.create(this.storage.toWrite, files);
         const profileAddress = container.resolve(profileFilename);
@@ -99,21 +96,8 @@ export default class Pheme {
     assets?: AssetMap
   ): Task<BlockWrapper> {
     return createTask({
-      estimate: async () => {
-        const blockWrapper = await BlockWrapper.create(
-          this.storage.toWrite,
-          {
-            uuid: generateUuid(),
-            address: content.path,
-            timestamp: Date.now(),
-            meta,
-            previous: '',
-          },
-          [...convertAssetMapToWritable(assets), content],
-          true
-        );
-        return this.registry.setPointer(handle, blockWrapper.address).estimate();
-      },
+      estimate: async () =>
+        this.registry.setPointer(handle, Storage.addressForEstimation()).estimate(),
       execute: async (context) => {
         const previous = await this.registry.getPointer(handle).execute();
         const blockWrapper = await BlockWrapper.create(
@@ -144,7 +128,7 @@ export default class Pheme {
     return this.modifyHandleBlock(handle, uuid, async (blockWrapper) => {
       const blockPatch: Partial<Block> = { meta, address: content.path };
       const files = [...convertAssetMapToWritable(assets), content];
-      return blockWrapper.patch(blockPatch, files);
+      return blockWrapper.patch(this.storage.toWrite, blockPatch, files);
     });
   }
 
@@ -201,9 +185,7 @@ export default class Pheme {
         if (!blockWrapperToModify) throw new Error(`${handle} handle does not need modification`);
 
         let pointer = blockWrapperToModify.block.previous;
-        const modifiedBlockWrapper = await modify(
-          blockWrapperToModify.withIpfs(this.storage.toWrite)
-        );
+        const modifiedBlockWrapper = await modify(blockWrapperToModify);
 
         if (modifiedBlockWrapper) {
           pointer = modifiedBlockWrapper.address;
@@ -212,9 +194,9 @@ export default class Pheme {
 
         while (rewrite.length > 0) {
           const blockWrapperToRewrite = rewrite.pop();
-          const rewrittenBlockWrapper = await blockWrapperToRewrite
-            .withIpfs(this.storage.toWrite)
-            .patch({ previous: pointer });
+          const rewrittenBlockWrapper = await blockWrapperToRewrite.patch(this.storage.toWrite, {
+            previous: pointer,
+          });
           pointer = rewrittenBlockWrapper.address;
           modifiedChain.unshift(rewrittenBlockWrapper);
         }

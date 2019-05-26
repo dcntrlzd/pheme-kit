@@ -15,12 +15,9 @@ export default class BlockWrapper {
 
   public readonly address: string;
 
-  public readonly ipfs: IPFSClient;
-
   private static BLOCK_FILENAME = 'block.json';
 
-  private constructor(ipfs: IPFSClient, address: string, block?: Block) {
-    this.ipfs = ipfs;
+  private constructor(address: string, block?: Block) {
     this.address = address;
     this.block = block;
   }
@@ -57,10 +54,6 @@ export default class BlockWrapper {
     }
   }
 
-  public withIpfs(ipfs: IPFSClient) {
-    return new BlockWrapper(ipfs, this.address, this.block);
-  }
-
   public get contentAddress() {
     return this.resolve(this.block.address);
   }
@@ -69,16 +62,16 @@ export default class BlockWrapper {
     return this.blockVersion === 'v3' ? this.root : undefined;
   }
 
-  public loadContainer() {
+  public loadContainer(ipfs: IPFSClient) {
     if (!this.containerAddress) throw new Error('This block does not have a container');
-    return Container.load(this.ipfs, this.containerAddress);
+    return Container.load(ipfs, this.containerAddress);
   }
 
-  private ensureContainer(onlyHash = false) {
+  private ensureContainer(ipfs: IPFSClient, onlyHash = false) {
     if (!this.isLoaded) throw new Error('Block is not loaded yet.');
     if (!this.containerAddress) {
       return Container.create(
-        this.ipfs,
+        ipfs,
         [
           {
             path: BlockWrapper.BLOCK_FILENAME,
@@ -88,7 +81,7 @@ export default class BlockWrapper {
         onlyHash
       );
     }
-    return this.loadContainer();
+    return this.loadContainer(ipfs);
   }
 
   private static serializeBlock(block: Block) {
@@ -104,7 +97,7 @@ export default class BlockWrapper {
       detectBlockVersion(address) !== 'v3' ? address.replace(PROTOCOL_PATTERN, '') : address;
     const [rawBlockReference] = await ipfs.get(addressToLoad);
     const block = BlockWrapper.deserialize(rawBlockReference.content);
-    return new BlockWrapper(ipfs, address, block);
+    return new BlockWrapper(address, block);
   }
 
   public static async create(
@@ -122,10 +115,11 @@ export default class BlockWrapper {
     ];
 
     const container = await Container.create(ipfs, contents, onlyHash);
-    return new BlockWrapper(ipfs, container.resolve(BlockWrapper.BLOCK_FILENAME), block);
+    return new BlockWrapper(container.resolve(BlockWrapper.BLOCK_FILENAME), block);
   }
 
   public async patch(
+    ipfs: IPFSClient,
     blockPatch: Partial<Block>,
     files: ContainerWritable[] = [],
     onlyHash = false
@@ -139,12 +133,8 @@ export default class BlockWrapper {
       },
     ];
 
-    const container = await this.ensureContainer();
+    const container = await this.ensureContainer(ipfs);
     const patchedContainer = await container.patch(contents, onlyHash);
-    return new BlockWrapper(
-      this.ipfs,
-      patchedContainer.resolve(BlockWrapper.BLOCK_FILENAME),
-      patchedBlock
-    );
+    return new BlockWrapper(patchedContainer.resolve(BlockWrapper.BLOCK_FILENAME), patchedBlock);
   }
 }

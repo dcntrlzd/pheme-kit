@@ -5,3 +5,4 @@ packages/*/build
 packages/*/lib
 packages/*/artifacts
 .eslintcache
+coverage

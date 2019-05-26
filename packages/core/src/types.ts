@@ -27,6 +27,8 @@ export interface IPFSFileReference {
   path: string;
   hash: string;
   size?: number;
+  name?: string;
+  type?: string;
 }
 
 export interface IPFSFileResponse {
@@ -61,6 +63,8 @@ export interface IPFSClient {
     rm: (hash, options?: any) => Promise<void>;
   };
   object: any; // TODO: fill
+  refs: any; // TODO: fill
+  files: any; // TODO: fill
   add: (object: IPFSWritable, options?: any) => Promise<IPFSFileReference[]>;
   get: (hash: string) => Promise<IPFSFileResponse[]>;
   ls: (hash: string) => Promise<IPFSFileReference[]>;
