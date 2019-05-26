@@ -1,4 +1,4 @@
-import { IPFSFileReference } from './types';
+import { IPFSFileReference, IPFSRestrictedClient } from './types';
 
 export type WritableContent = Buffer;
 export type WritableLink = string;
@@ -22,7 +22,7 @@ export default class Container {
 
   public readonly items: IPFSFileReference[];
 
-  public readonly ipfs: any;
+  public readonly ipfs: IPFSRestrictedClient;
 
   public static getDirname = (path: string) => {
     const sections = path.split(Container.SEPARATOR);
@@ -36,7 +36,7 @@ export default class Container {
   }
 
   public static async create(
-    ipfs: any,
+    ipfs: IPFSRestrictedClient,
     contents: ContainerWritable[],
     onlyHash = false
   ): Promise<Container> {
@@ -60,11 +60,11 @@ export default class Container {
 
     const directoryContent = Buffer.from('');
 
-    const filesToAdd = [
+    const filesToAdd: ContainerWritableContent[] = [
       ...writableContents,
       ...directoriesToInitialize.map((path) => ({
         path,
-        data: directoryContent,
+        content: directoryContent,
       })),
     ];
 
@@ -91,7 +91,7 @@ export default class Container {
     return Container.load(ipfs, address);
   }
 
-  public static async load(ipfs: any, address: string): Promise<Container> {
+  public static async load(ipfs: IPFSRestrictedClient, address: string): Promise<Container> {
     const listDirectory = async (path: string, depthLimit = 5) => {
       // TODO: refactor to use object.get and traverse all links (infura rpc limitation)
       const items: IPFSFileReference[] = await ipfs.ls(path);
