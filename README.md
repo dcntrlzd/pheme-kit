@@ -36,7 +36,7 @@ import Pheme from '@pheme-kit/core';
 const pheme = Pheme.create({
   providerOrSigner: ethersProvider.getSigner(),
   contractAddress: CONTRACT_ADDRESS,
-  ipfsRpcURL: IPFS_RPC_URL,
+  ipfsApiUrl: IPFS_API_URL,
   ipfsGatewayURL: IPFS_GATEWAY_URL
 );
 ```

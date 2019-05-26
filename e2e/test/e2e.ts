@@ -1,4 +1,4 @@
-import Pheme from '@pheme-kit/core/src';
+import Pheme from '@pheme-kit/core/src/pheme';
 
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
@@ -36,9 +36,9 @@ contract('E2E Test', () => {
     pheme = Pheme.create({
       providerOrSigner: provider.getSigner(),
       contractAddress: registry.address,
-      ipfsRpcUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
+      ipfsApiUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
       ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
-      // ipfsRpcUrl: `http://localhost:5001`,
+      // ipfsApiUrl: `http://localhost:5001`,
       // ipfsGatewayUrl: `http://localhost:5000`,
     });
   });

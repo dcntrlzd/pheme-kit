@@ -2,7 +2,7 @@ import PhemeStorage from '../storage';
 
 describe('PhemeStorage', () => {
   const instance: PhemeStorage = new PhemeStorage(
-    process.env.IPFS_RPC_URL,
+    process.env.IPFS_API_URL,
     process.env.IPFS_GATEWAY_URL
   );
 

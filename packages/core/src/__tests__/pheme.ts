@@ -48,7 +48,7 @@ describe('Core', () => {
       providerOrSigner: undefined,
       contractAddress: undefined,
       ipfsGatewayUrl: process.env.IPFS_GATEWAY_URL,
-      ipfsRpcUrl: process.env.IPFS_RPC_URL,
+      ipfsApiUrl: process.env.IPFS_API_URL,
     });
   });
 

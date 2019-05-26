@@ -12,7 +12,7 @@ export default async function jestSetup() {
     });
   });
 
-  process.env.IPFS_RPC_URL = `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`;
+  process.env.IPFS_API_URL = `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`;
   process.env.IPFS_GATEWAY_URL = `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`;
   (global as any).ipfsServer = ipfsServer;
 }

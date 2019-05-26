@@ -2,7 +2,7 @@ import Container, { WritableContent, WritableLink } from '../container';
 import { buildIPFSInstaceFromUrl } from '../storage';
 
 describe('Container', () => {
-  const ipfs = buildIPFSInstaceFromUrl(process.env.IPFS_RPC_URL);
+  const ipfs = buildIPFSInstaceFromUrl(process.env.IPFS_API_URL);
   const TEST_DATA = 'HELLO WORLD';
 
   const contentPath = 'content.txt';

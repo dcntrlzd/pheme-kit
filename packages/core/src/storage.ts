@@ -34,10 +34,10 @@ export default class PhemeStorage {
 
   private static ASSETS_DIRECTORY = 'assets';
 
-  public constructor(rpcUrl: string, gatewayUrl?: string) {
-    this.gatewayUrl = gatewayUrl || rpcUrl;
+  public constructor(apiUrl: string, gatewayUrl?: string) {
+    this.gatewayUrl = gatewayUrl || apiUrl;
 
-    this.toWrite = buildIPFSInstaceFromUrl(rpcUrl);
+    this.toWrite = buildIPFSInstaceFromUrl(apiUrl);
     this.toRead = buildIPFSInstaceFromUrl(this.gatewayUrl);
   }
 

@@ -31,12 +31,12 @@ export default class Pheme {
   public static create(config: {
     providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer;
     contractAddress: string;
-    ipfsRpcUrl: string;
+    ipfsApiUrl: string;
     ipfsGatewayUrl?: string;
   }) {
     const registry = Registry.attach(config.contractAddress, config.providerOrSigner);
-    const { ipfsRpcUrl, ipfsGatewayUrl = config.ipfsRpcUrl } = config;
-    const storage = new Storage(ipfsRpcUrl, ipfsGatewayUrl);
+    const { ipfsApiUrl, ipfsGatewayUrl = config.ipfsApiUrl } = config;
+    const storage = new Storage(ipfsApiUrl, ipfsGatewayUrl);
     return new Pheme(registry, storage);
   }
 
