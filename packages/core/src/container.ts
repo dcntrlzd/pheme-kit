@@ -93,6 +93,7 @@ export default class Container {
 
   public static async load(ipfs: any, address: string): Promise<Container> {
     const listDirectory = async (path: string, depthLimit = 5) => {
+      // TODO: refactor to use object.get and traverse all links (infura rpc limitation)
       const items: IPFSFileReference[] = await ipfs.ls(path);
       const directories = items.filter((item) => item.type === 'dir');
       const files = items.filter((item) => !directories.includes(item));

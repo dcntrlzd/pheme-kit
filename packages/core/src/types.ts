@@ -53,6 +53,12 @@ export interface IPFSWritableObject {
 
 export type IPFSWritable = IPFSWritableData | IPFSWritableObject | IPFSWritableObject[];
 
+// TODO: Limit to infura methods
+export interface IPFSLimitedClient {
+
+}
+
+// TODO: Extend IPFSLimitedClient
 export interface IPFSClient {
   swarm: {
     peers: (opts?: { verbose: boolean }) => Promise<IPFSPeerInfo[]>;
