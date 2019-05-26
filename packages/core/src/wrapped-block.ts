@@ -14,11 +14,14 @@ export const detectBlockVersion = (address: string): BlockVersion => {
 export default class WrappedBlock {
   public readonly block: Block;
 
+  public readonly storage: Storage;
+
   public readonly address: string;
 
   private static BLOCK_FILENAME = 'block.json';
 
-  private constructor(address: string, block?: Block) {
+  private constructor(storage: Storage, address: string, block?: Block) {
+    this.storage = storage;
     this.address = address;
     this.block = block;
   }
@@ -55,6 +58,10 @@ export default class WrappedBlock {
     }
   }
 
+  public urlFor(address: string) {
+    return this.storage.publicUrlFor(this.resolve(address));
+  }
+
   public get contentAddress() {
     return this.resolve(this.block.address);
   }
@@ -63,16 +70,16 @@ export default class WrappedBlock {
     return this.blockVersion === 'v3' ? this.root : undefined;
   }
 
-  public loadContainer(storage: Storage) {
+  public loadContainer() {
     if (!this.containerAddress) throw new Error('This block does not have a container');
-    return Container.load(storage.writer, this.containerAddress);
+    return Container.load(this.storage.writer, this.containerAddress);
   }
 
-  private ensureContainer(storage: Storage, onlyHash = false) {
+  private ensureContainer(onlyHash = false) {
     if (!this.isLoaded) throw new Error('Block is not loaded yet.');
     if (!this.containerAddress) {
       return Container.create(
-        storage.writer,
+        this.storage.writer,
         [
           {
             path: WrappedBlock.BLOCK_FILENAME,
@@ -82,7 +89,7 @@ export default class WrappedBlock {
         onlyHash
       );
     }
-    return this.loadContainer(storage);
+    return this.loadContainer();
   }
 
   private static serializeBlock(block: Block) {
@@ -97,7 +104,7 @@ export default class WrappedBlock {
     const addressToLoad =
       detectBlockVersion(address) !== 'v3' ? address.replace(PROTOCOL_PATTERN, '') : address;
     const block = await storage.readObject(addressToLoad);
-    return new WrappedBlock(address, block);
+    return new WrappedBlock(storage, address, block);
   }
 
   public static async create(
@@ -115,11 +122,10 @@ export default class WrappedBlock {
     ];
 
     const container = await Container.create(storage.writer, contents, onlyHash);
-    return new WrappedBlock(container.resolve(WrappedBlock.BLOCK_FILENAME), block);
+    return new WrappedBlock(storage, container.resolve(WrappedBlock.BLOCK_FILENAME), block);
   }
 
   public async patch(
-    storage: Storage,
     blockPatch: Partial<Block>,
     files: ContainerWritable[] = [],
     onlyHash = false
@@ -133,8 +139,12 @@ export default class WrappedBlock {
       },
     ];
 
-    const container = await this.ensureContainer(storage);
+    const container = await this.ensureContainer();
     const patchedContainer = await container.patch(contents, onlyHash);
-    return new WrappedBlock(patchedContainer.resolve(WrappedBlock.BLOCK_FILENAME), patchedBlock);
+    return new WrappedBlock(
+      this.storage,
+      patchedContainer.resolve(WrappedBlock.BLOCK_FILENAME),
+      patchedBlock
+    );
   }
 }

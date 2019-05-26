@@ -128,7 +128,7 @@ export default class Pheme {
     return this.modifyHandleBlock(handle, uuid, async (wrappedBlock) => {
       const blockPatch: Partial<Block> = { meta, address: content.path };
       const files = [...convertAssetMapToWritable(assets), content];
-      return wrappedBlock.patch(this.storage, blockPatch, files);
+      return wrappedBlock.patch(blockPatch, files);
     });
   }
 
@@ -194,7 +194,7 @@ export default class Pheme {
 
         while (rewrite.length > 0) {
           const wrappedBlockToRewrite = rewrite.pop();
-          const rewrittenwrappedBlock = await wrappedBlockToRewrite.patch(this.storage, {
+          const rewrittenwrappedBlock = await wrappedBlockToRewrite.patch({
             previous: pointer,
           });
           pointer = rewrittenwrappedBlock.address;
