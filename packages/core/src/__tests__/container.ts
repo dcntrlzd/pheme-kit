@@ -22,20 +22,20 @@ describe('Container', () => {
     expect(downloadedFile.content.toString()).toBe(TEST_DATA);
   };
 
-  describe('Container.getDirname', () => {
-    it('should get the directory name for a regular file path', () => {
-      expect(Container.getDirname('hello/world/test.txt')).toBe('hello/world');
-      expect(Container.getDirname('/hello/world/test.txt')).toBe('hello/world');
+  describe('Container.getBasename', () => {
+    it('should get the base name for a regular file path', () => {
+      expect(Container.getBasename('hello/world/test.txt')).toBe('hello/world');
+      expect(Container.getBasename('/hello/world/test.txt')).toBe('hello/world');
     });
 
-    it('should get the directory name for a file without a directory', () => {
-      expect(Container.getDirname('test.txt')).toBe('');
-      expect(Container.getDirname('/test.txt')).toBe('');
+    it('should get the base name for a file without a directory', () => {
+      expect(Container.getBasename('test.txt')).toBe('');
+      expect(Container.getBasename('/test.txt')).toBe('');
     });
 
-    it('should get the directory name for a directory path', () => {
-      expect(Container.getDirname('hello/world/')).toBe('hello/world');
-      expect(Container.getDirname('/hello/world/')).toBe('hello/world');
+    it('should get the base name for a directory path', () => {
+      expect(Container.getBasename('hello/world/')).toBe('hello/world');
+      expect(Container.getBasename('/hello/world/')).toBe('hello/world');
     });
   });
 
@@ -54,7 +54,6 @@ describe('Container', () => {
     it('should be able to create an empty container', async () => {
       const container = await Container.create(ipfs, []);
       expect(container.address).not.toBeUndefined();
-      expect(container.items.length).toBe(0);
     });
 
     it('should be able to create a container with writable contents', async () => {
@@ -62,9 +61,8 @@ describe('Container', () => {
         { path: contentPath, content: writableContent },
       ]);
       expect(container.address).not.toBeUndefined();
-      expect(container.items.length).toBe(1);
 
-      const [item] = container.items;
+      const item = container.items.find((containerItem) => containerItem.path === contentPath);
       expect(item.path).toBe(contentPath);
       expect(item.hash).not.toBeUndefined();
       await expectHashToContainTestData(Container.resolve(container.address, item.path));
@@ -74,9 +72,8 @@ describe('Container', () => {
       const container = await Container.create(ipfs, [{ path: linkPath, hash: writableLink }]);
 
       expect(container.address).not.toBeUndefined();
-      expect(container.items.length).toBe(1);
 
-      const [item] = container.items;
+      const item = container.items.find((containerItem) => containerItem.path === linkPath);
       expect(item.path).toBe(linkPath);
       expect(item.hash).not.toBeUndefined();
       await expectHashToContainTestData(Container.resolve(container.address, item.path));
@@ -89,9 +86,8 @@ describe('Container', () => {
       ]);
 
       expect(container.address).not.toBeUndefined();
-      expect(container.items.length).toBe(2);
-
-      const [contentItem, linkItem] = container.items;
+      const contentItem = container.items.find((item) => item.path === contentPath);
+      const linkItem = container.items.find((item) => item.path === linkPath);
 
       expect(contentItem.path).toBe(contentPath);
       expect(contentItem.hash).not.toBeUndefined();
@@ -109,7 +105,11 @@ describe('Container', () => {
         { path: 'base/link/directory/test.txt', hash: writableLink },
       ]);
 
-      const [contentItem, firstLinkItem, secondLinkItem] = container.items;
+      const contentItem = container.items.find((item) => item.path === 'base/content/test.txt');
+      const firstLinkItem = container.items.find((item) => item.path === 'base/link/test.txt');
+      const secondLinkItem = container.items.find(
+        (item) => item.path === 'base/link/directory/test.txt'
+      );
 
       expect(contentItem.path).toBe('base/content/test.txt');
       expect(contentItem.hash).not.toBeUndefined();
@@ -152,22 +152,11 @@ describe('Container', () => {
       ]);
       const initialMap = mapContainer(initialContainer);
 
-      expect(initialContainer.items).toMatchObject([
-        { path: 'overwrite.txt', hash: expect.anything() },
-        { path: 'same.txt', hash: expect.anything() },
-      ]);
-
       const patchedContainer = await initialContainer.patch([
         { path: 'overwrite.txt', content: Buffer.from('OVERWRITTEN') },
         { path: 'new.txt', content: Buffer.from('NEW') },
       ]);
       const patchedMap = mapContainer(patchedContainer);
-
-      expect(patchedContainer.items).toMatchObject([
-        { path: 'new.txt', hash: expect.anything() },
-        { path: 'overwrite.txt', hash: expect.anything() },
-        { path: 'same.txt', hash: expect.anything() },
-      ]);
 
       expect(patchedContainer.address).not.toBe(initialContainer.address);
       expect(patchedMap['same.txt']).toBe(initialMap['same.txt']);

@@ -1,4 +1,9 @@
-import { IPFSFileReference, IPFSRestrictedClient } from './types';
+// TODO: Improve path parsing/processing
+// TODO: Split create
+// TODO: Switch to IPFSRestrictedClient
+// TODO: Increase performance
+
+import { DAGNode, IPFSFileReference, IPFSClient } from './types';
 
 export type WritableContent = Buffer;
 export type WritableLink = string;
@@ -13,6 +18,14 @@ export interface ContainerWritableLink {
   hash: WritableLink;
 }
 
+export interface ContainerItem {
+  path: string;
+  hash: string;
+  node: DAGNode;
+}
+
+const compactArray = (list) => list.filter((item) => item !== undefined);
+
 export type ContainerWritable = ContainerWritableContent | ContainerWritableLink;
 
 export default class Container {
@@ -20,14 +33,32 @@ export default class Container {
 
   public static readonly SEPARATOR = '/';
 
-  public readonly items: IPFSFileReference[];
+  public readonly items: ContainerItem[];
 
-  public readonly ipfs: IPFSRestrictedClient;
+  public readonly ipfs: IPFSClient;
 
-  public static getDirname = (path: string) => {
-    const sections = path.split(Container.SEPARATOR);
+  public static sortWritablesByPath = (writables: ContainerWritable[]) =>
+    [...writables].sort((a, b) => {
+      const aBasename = Container.getBasename(a.path);
+      const bBasename = Container.getBasename(b.path);
+
+      const depthComparison =
+        bBasename.split(Container.SEPARATOR).length - aBasename.split(Container.SEPARATOR).length;
+
+      let nameComparison = 0;
+      if (aBasename < bBasename) {
+        nameComparison = -1;
+      } else if (aBasename > bBasename) {
+        nameComparison = 1;
+      }
+
+      return depthComparison === 0 ? nameComparison : depthComparison;
+    });
+
+  public static getBasename = (path: string) => {
+    const sections = path.replace(/^\//, '').split(Container.SEPARATOR);
     sections.pop();
-    return sections.filter((part) => part !== '').join(Container.SEPARATOR);
+    return sections.join(Container.SEPARATOR);
   };
 
   public static resolve(address: string, path: string) {
@@ -36,27 +67,37 @@ export default class Container {
   }
 
   public static async create(
-    ipfs: IPFSRestrictedClient,
+    ipfs: IPFSClient,
     contents: ContainerWritable[],
     onlyHash = false
   ): Promise<Container> {
-    const writableContents: ContainerWritableContent[] = contents.filter(
+    const writables = Container.sortWritablesByPath(contents);
+
+    const writableContents: ContainerWritableContent[] = writables.filter(
       (content) => !!(content as ContainerWritableContent).content
     ) as ContainerWritableContent[];
 
-    const writableLinks: ContainerWritableLink[] = contents.filter(
+    const writableLinks: ContainerWritableLink[] = writables.filter(
       (content) => !!(content as ContainerWritableLink).hash
     ) as ContainerWritableLink[];
 
     const linkDirectories = writableLinks
-      .map((link) => Container.getDirname(link.path))
+      .map((link) => Container.getBasename(link.path))
       .filter((path) => !!path);
+
     const contentDirectories = writableContents
-      .map((link) => Container.getDirname(link.path))
+      .map((link) => Container.getBasename(link.path))
       .filter((path) => !!path);
-    const directoriesToInitialize = linkDirectories.filter(
+
+    const allDirectoriesToInitialize = linkDirectories.filter(
       (path) => !contentDirectories.includes(path)
     );
+
+    const directoriesToInitialize = allDirectoriesToInitialize.filter((path) => {
+      const pathIndex = allDirectoriesToInitialize.indexOf(path);
+      const matchedIndex = allDirectoriesToInitialize.findIndex((item) => item.indexOf(path) === 0);
+      return pathIndex === matchedIndex;
+    });
 
     const directoryContent = Buffer.from('');
 
@@ -75,53 +116,113 @@ export default class Container {
     });
 
     const wrapper = allItems.find((item) => item.path === '');
+    const container = await Container.load(ipfs, wrapper.hash);
     let address = wrapper.hash;
 
-    if (onlyHash) return new Container(ipfs, address, [...allItems, ...writableLinks]);
+    if (onlyHash) return container;
 
-    for (const writableLink of writableLinks) {
-      const update = await ipfs.object.patch.addLink(address, {
-        name: writableLink.path,
-        cid: writableLink.hash,
-      });
+    const linksGroupedByBasename: { [basename: string]: ContainerWritableLink[] } = {};
+    writableLinks.forEach((link) => {
+      const basename = Container.getBasename(link.path);
+      if (!linksGroupedByBasename[basename]) linksGroupedByBasename[basename] = [];
+      linksGroupedByBasename[basename].push(link);
+    });
 
-      address = update.toString();
+    const { items } = container;
+    for (const pathToPatch of Object.keys(linksGroupedByBasename)) {
+      const patchList = Container.buildAncestryList(items, pathToPatch);
+      let itemsToAdd = linksGroupedByBasename[pathToPatch];
+
+      for (const itemToPatch of patchList) {
+        const itemIndex = items.findIndex((item) => item === itemToPatch);
+        const patchedItem = await Container.patchItem(ipfs, itemToPatch, itemsToAdd);
+        items[itemIndex] = patchedItem;
+        itemsToAdd = [patchedItem];
+        if (itemToPatch.path === '') address = patchedItem.hash;
+      }
     }
 
     return Container.load(ipfs, address);
   }
 
-  public static async load(ipfs: IPFSRestrictedClient, address: string): Promise<Container> {
-    const listDirectory = async (path: string, depthLimit = 5) => {
-      // TODO: refactor to use object.get and traverse all links (infura rpc limitation)
-      const items: IPFSFileReference[] = await ipfs.ls(path);
-      const directories = items.filter((item) => item.type === 'dir');
-      const files = items.filter((item) => !directories.includes(item));
+  private static buildAncestryList(items: ContainerItem[], path: string): ContainerItem[] {
+    const parts = path.split(Container.SEPARATOR);
+    if (parts[0] !== '') parts.unshift('');
 
-      if (depthLimit > 0) {
-        for (const directory of directories) {
-          const replacement = await listDirectory(`${path}/${directory.name}`, depthLimit - 1);
-          files.push(...replacement);
-        }
-      }
+    const steps = parts
+      .map((part, i) => {
+        const pathToMatch = parts.slice(1, i + 1).join(Container.SEPARATOR);
+        const match = items.find((cursor) => cursor.path === pathToMatch);
+        if (!match) throw new Error('Failed to find an ancestor');
+        return match;
+      })
+      .reverse();
 
-      return files;
-    };
-
-    const items = await listDirectory(address);
-    const root = [address, Container.SEPARATOR].join('');
-
-    return new Container(
-      ipfs,
-      address,
-      items.map(({ path, hash }) => ({
-        path: path.replace(root, ''),
-        hash,
-      }))
-    );
+    return steps;
   }
 
-  private constructor(ipfs: any, address: string, items: IPFSFileReference[]) {
+  private static async patchItem(
+    ipfs: IPFSClient,
+    item: ContainerItem,
+    links: ContainerWritableLink[]
+  ) {
+    const linksToAdd = links.filter((link) => Container.getBasename(link.path) === item.path);
+
+    let { node } = item;
+    for (const link of linksToAdd) {
+      const linkName = link.path.replace(item.path, '').replace(/^\//, '');
+      if (node.Links.find((nodeLink) => nodeLink.Name === linkName)) {
+        node = await (node.constructor as any).rmLink(node, linkName);
+      }
+
+      node = await (node.constructor as any).addLink(node, {
+        name: linkName,
+        hash: link.hash,
+      });
+    }
+
+    const cid = await ipfs.object.put(node);
+    const hash = cid.toBaseEncodedString();
+
+    return { ...item, node, hash };
+  }
+
+  private static async loadItems(
+    ipfs: IPFSClient,
+    address: string,
+    maxDepth: number = 5
+  ): Promise<ContainerItem[]> {
+    const traverse = async (
+      hash: string,
+      depthLimit: number,
+      base?: string
+    ): Promise<ContainerItem[]> => {
+      if (depthLimit < 0) return [];
+      const node = await ipfs.object.get(hash);
+      const list = [{ hash, path: base || '', node }];
+      if (!node.Links.length) return list;
+
+      for (const link of node.Links) {
+        const linkHash = link.Hash.toString();
+        const linkName = link.Name;
+        const linkPath = compactArray([base, linkName]).join(Container.SEPARATOR);
+        const traversedLink = await traverse(linkHash, depthLimit - 1, linkPath);
+        list.push(...traversedLink);
+      }
+
+      return list;
+    };
+
+    return traverse(address, maxDepth);
+  }
+
+  public static async load(ipfs: IPFSClient, address: string): Promise<Container> {
+    const items = await Container.loadItems(ipfs, address);
+
+    return new Container(ipfs, address, items);
+  }
+
+  private constructor(ipfs: any, address: string, items: ContainerItem[]) {
     this.ipfs = ipfs;
     this.address = address;
     this.items = items;

@@ -17,11 +17,7 @@ export type Chain<M = any> = Node<M>[];
 
 export type BlockVersion = 'v1' | 'v2' | 'v3';
 
-export interface DAGNode {
-  data: Buffer;
-  links: any[];
-  multihash: number[];
-}
+export type DAGNode = any;
 
 export interface IPFSFileReference {
   path: string;
@@ -60,6 +56,7 @@ export type IPFSWritable = IPFSWritableData | IPFSWritableObject | IPFSWritableO
 export interface IPFSRestrictedClient {
   block: {
     get: (cid: CID) => Promise<IPFSBlock>;
+    put: (block: IPFSBlock, cid: CID) => Promise<IPFSBlock>;
     stat: (cid: CID) => Promise<{ key: string; size: number }>;
   };
   cat: (ipfsPath: string, options?: { offset?: number; length?: number }) => Promise<Buffer>;
@@ -69,6 +66,7 @@ export interface IPFSRestrictedClient {
       path?: string,
       options?: { localResolve?: boolean }
     ) => Promise<{ value: Buffer; remainderPath: string }>;
+    put: (object: DAGNode) => Promise<CID>;
   };
   get: (ipfsPath: string) => Promise<IPFSFileResponse[]>;
   object: {
@@ -85,6 +83,7 @@ export interface IPFSRestrictedClient {
       DataSize: number;
       CumulativeSize: number;
     }>;
+    put: (object: DAGNode, options?: { enc?: string }) => Promise<CID>;
   };
   add: (
     data: IPFSWritable,
@@ -106,6 +105,7 @@ export interface IPFSClient extends IPFSRestrictedClient {
   swarm: {
     peers: (opts?: { verbose: boolean }) => Promise<IPFSPeerInfo[]>;
   };
+  object: any; // TODO: extend restricted one correctly
   pin: {
     add: (hash: string, options?: any) => Promise<void>;
     ls: (hash?: string, options?: any) => Promise<{ hash: string; type: string }[]>;
