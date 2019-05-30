@@ -1,7 +1,6 @@
 // TODO: Improve path parsing/processing
-// TODO: Split create
 // TODO: Switch to IPFSRestrictedClient
-// TODO: Increase performance
+// TODO: Increase performance (avoid reloading in writeLinks)
 
 import { DAGNode, IPFSFileReference, IPFSClient } from './types';
 
@@ -66,63 +65,30 @@ export default class Container {
     return [address, ...sections].join(Container.SEPARATOR);
   }
 
-  public static async create(
+  private static async writeContents(
     ipfs: IPFSClient,
-    contents: ContainerWritable[],
-    onlyHash = false
+    contents: ContainerWritableContent[]
   ): Promise<Container> {
-    const writables = Container.sortWritablesByPath(contents);
-
-    const writableContents: ContainerWritableContent[] = writables.filter(
-      (content) => !!(content as ContainerWritableContent).content
-    ) as ContainerWritableContent[];
-
-    const writableLinks: ContainerWritableLink[] = writables.filter(
-      (content) => !!(content as ContainerWritableLink).hash
-    ) as ContainerWritableLink[];
-
-    const linkDirectories = writableLinks
-      .map((link) => Container.getBasename(link.path))
-      .filter((path) => !!path);
-
-    const contentDirectories = writableContents
-      .map((link) => Container.getBasename(link.path))
-      .filter((path) => !!path);
-
-    const allDirectoriesToInitialize = linkDirectories.filter(
-      (path) => !contentDirectories.includes(path)
-    );
-
-    const directoriesToInitialize = allDirectoriesToInitialize.filter((path) => {
-      const pathIndex = allDirectoriesToInitialize.indexOf(path);
-      const matchedIndex = allDirectoriesToInitialize.findIndex((item) => item.indexOf(path) === 0);
-      return pathIndex === matchedIndex;
-    });
-
-    const directoryContent = Buffer.from('');
-
-    const filesToAdd: ContainerWritableContent[] = [
-      ...writableContents,
-      ...directoriesToInitialize.map((path) => ({
-        path,
-        content: directoryContent,
-      })),
-    ];
-
-    const allItems: IPFSFileReference[] = await ipfs.add(filesToAdd, {
-      onlyHash,
+    const items: IPFSFileReference[] = await ipfs.add(contents, {
       recursive: true,
       wrapWithDirectory: true,
     });
 
-    const wrapper = allItems.find((item) => item.path === '');
-    const container = await Container.load(ipfs, wrapper.hash);
-    let address = wrapper.hash;
+    const wrapper = items.find((item) => item.path === '');
+    return Container.load(ipfs, wrapper.hash);
+  }
 
-    if (onlyHash) return container;
+  private static async writeLinks(
+    container: Container,
+    links: ContainerWritableLink[]
+  ): Promise<Container> {
+    if (links.length === 0) return Promise.resolve(container);
+
+    const { ipfs } = container;
+    let { address } = container;
 
     const linksGroupedByBasename: { [basename: string]: ContainerWritableLink[] } = {};
-    writableLinks.forEach((link) => {
+    links.forEach((link) => {
       const basename = Container.getBasename(link.path);
       if (!linksGroupedByBasename[basename]) linksGroupedByBasename[basename] = [];
       linksGroupedByBasename[basename].push(link);
@@ -130,7 +96,7 @@ export default class Container {
 
     const { items } = container;
     for (const pathToPatch of Object.keys(linksGroupedByBasename)) {
-      const patchList = Container.buildAncestryList(items, pathToPatch);
+      const patchList = Container.buildPatchPlan(items, pathToPatch);
       let itemsToAdd = linksGroupedByBasename[pathToPatch];
 
       for (const itemToPatch of patchList) {
@@ -145,8 +111,49 @@ export default class Container {
     return Container.load(ipfs, address);
   }
 
-  private static buildAncestryList(items: ContainerItem[], path: string): ContainerItem[] {
+  public static async create(ipfs: IPFSClient, writables: ContainerWritable[]): Promise<Container> {
+    const sortedWritables = Container.sortWritablesByPath(writables);
+
+    const contents: ContainerWritableContent[] = sortedWritables.filter(
+      (content) => !!(content as ContainerWritableContent).content
+    ) as ContainerWritableContent[];
+
+    const links: ContainerWritableLink[] = sortedWritables.filter(
+      (content) => !!(content as ContainerWritableLink).hash
+    ) as ContainerWritableLink[];
+
+    const linkDirectories = links
+      .map((link) => Container.getBasename(link.path))
+      .filter((path) => !!path);
+
+    const contentDirectories = contents
+      .map((link) => Container.getBasename(link.path))
+      .filter((path) => !!path);
+
+    const allDirectoriesToInitialize = linkDirectories.filter(
+      (path) => !contentDirectories.includes(path)
+    );
+
+    const directoriesToInitialize = allDirectoriesToInitialize.filter((path) => {
+      const pathIndex = allDirectoriesToInitialize.indexOf(path);
+      const matchedIndex = allDirectoriesToInitialize.findIndex((item) => item.indexOf(path) === 0);
+      return pathIndex === matchedIndex;
+    });
+
+    const container = await Container.writeContents(ipfs, [
+      ...contents,
+      ...directoriesToInitialize.map((path) => ({
+        path,
+        content: Buffer.from(''),
+      })),
+    ]);
+
+    return Container.writeLinks(container, links);
+  }
+
+  private static buildPatchPlan(items: ContainerItem[], path: string): ContainerItem[] {
     const parts = path.split(Container.SEPARATOR);
+    // TODO: this part is suuuuper smelly
     if (parts[0] !== '') parts.unshift('');
 
     const steps = parts
@@ -232,7 +239,7 @@ export default class Container {
     return Container.resolve(this.address, path);
   }
 
-  public patch(updates: ContainerWritable[], onlyHash = false) {
+  public patch(updates: ContainerWritable[]) {
     const changeMap: { [path: string]: ContainerWritable } = {};
 
     this.items.forEach((writable) => {
@@ -243,6 +250,6 @@ export default class Container {
       changeMap[writable.path] = writable;
     });
 
-    return Container.create(this.ipfs, Object.values(changeMap), onlyHash);
+    return Container.create(this.ipfs, Object.values(changeMap));
   }
 }
