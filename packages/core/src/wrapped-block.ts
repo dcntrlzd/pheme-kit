@@ -75,7 +75,7 @@ export default class WrappedBlock {
     return Container.load(this.storage.writer, this.containerAddress);
   }
 
-  private ensureContainer(onlyHash = false) {
+  private ensureContainer() {
     if (!this.isLoaded) throw new Error('Block is not loaded yet.');
     if (!this.containerAddress) {
       return Container.create(
@@ -85,8 +85,7 @@ export default class WrappedBlock {
             path: WrappedBlock.BLOCK_FILENAME,
             hash: this.root,
           },
-        ],
-        onlyHash
+        ]
       );
     }
     return this.loadContainer();
@@ -111,7 +110,6 @@ export default class WrappedBlock {
     storage: Storage,
     block: Block,
     files: ContainerWritable[] = [],
-    onlyHash = false
   ) {
     const contents = [
       ...files.filter((writable) => writable.path !== WrappedBlock.BLOCK_FILENAME),
@@ -121,14 +119,13 @@ export default class WrappedBlock {
       },
     ];
 
-    const container = await Container.create(storage.writer, contents, onlyHash);
+    const container = await Container.create(storage.writer, contents);
     return new WrappedBlock(storage, container.resolve(WrappedBlock.BLOCK_FILENAME), block);
   }
 
   public async patch(
     blockPatch: Partial<Block>,
     files: ContainerWritable[] = [],
-    onlyHash = false
   ) {
     const patchedBlock = { ...this.block, ...blockPatch };
     const contents = [
@@ -140,7 +137,7 @@ export default class WrappedBlock {
     ];
 
     const container = await this.ensureContainer();
-    const patchedContainer = await container.patch(contents, onlyHash);
+    const patchedContainer = await container.patch(contents);
     return new WrappedBlock(
       this.storage,
       patchedContainer.resolve(WrappedBlock.BLOCK_FILENAME),
