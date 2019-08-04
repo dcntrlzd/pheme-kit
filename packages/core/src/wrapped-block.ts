@@ -20,7 +20,7 @@ export default class WrappedBlock {
 
   private static BLOCK_FILENAME = 'block.json';
 
-  private constructor(storage: Storage, address: string, block?: Block) {
+  public constructor(storage: Storage, address: string, block?: Block) {
     this.storage = storage;
     this.address = address;
     this.block = block;
@@ -38,7 +38,7 @@ export default class WrappedBlock {
     switch (this.blockVersion) {
       case 'v1':
       case 'v2':
-        return this.block.address.replace(PROTOCOL_PATTERN, '');
+        return this.address.replace(PROTOCOL_PATTERN, '');
       case 'v3':
         return this.address.split('/')[0];
       default:

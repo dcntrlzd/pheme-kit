@@ -22,9 +22,6 @@ export interface ContainerItem {
   hash: string;
   node: DAGNode;
 }
-
-const compactArray = (list) => list.filter((item) => item !== undefined);
-
 export type ContainerWritable = ContainerWritableContent | ContainerWritableLink;
 
 export default class Container {
@@ -36,33 +33,17 @@ export default class Container {
 
   public readonly ipfs: IPFSClient;
 
-  public static sortWritablesByPath = (writables: ContainerWritable[]) =>
-    [...writables].sort((a, b) => {
-      const aBasename = Container.getBasename(a.path);
-      const bBasename = Container.getBasename(b.path);
-
-      const depthComparison =
-        bBasename.split(Container.SEPARATOR).length - aBasename.split(Container.SEPARATOR).length;
-
-      let nameComparison = 0;
-      if (aBasename < bBasename) {
-        nameComparison = -1;
-      } else if (aBasename > bBasename) {
-        nameComparison = 1;
-      }
-
-      return depthComparison === 0 ? nameComparison : depthComparison;
-    });
-
-  public static getBasename = (path: string) => {
-    const sections = path.replace(/^\//, '').split(Container.SEPARATOR);
-    sections.pop();
-    return sections.join(Container.SEPARATOR);
-  };
-
   public static resolve(address: string, path: string) {
     const sections = path.split(Container.SEPARATOR).filter((part) => part !== '');
     return [address, ...sections].join(Container.SEPARATOR);
+  }
+
+  private static validateWritables(writables: ContainerWritable[]) {
+    writables.forEach((writable) => {
+      if (writable.path.includes(Container.SEPARATOR)){
+        throw new Error('Directories insides containers are not supported');
+      }
+    })
   }
 
   private static async writeContents(
@@ -83,89 +64,29 @@ export default class Container {
     links: ContainerWritableLink[]
   ): Promise<Container> {
     if (links.length === 0) return Promise.resolve(container);
-
     const { ipfs } = container;
-    let { address } = container;
+    const rootNode = container.items.find(item => item.path === '');
 
-    const linksGroupedByBasename: { [basename: string]: ContainerWritableLink[] } = {};
-    links.forEach((link) => {
-      const basename = Container.getBasename(link.path);
-      if (!linksGroupedByBasename[basename]) linksGroupedByBasename[basename] = [];
-      linksGroupedByBasename[basename].push(link);
-    });
-
-    const { items } = container;
-    for (const pathToPatch of Object.keys(linksGroupedByBasename)) {
-      const patchList = Container.buildPatchPlan(items, pathToPatch);
-      let itemsToAdd = linksGroupedByBasename[pathToPatch];
-
-      for (const itemToPatch of patchList) {
-        const itemIndex = items.findIndex((item) => item === itemToPatch);
-        const patchedItem = await Container.patchItem(ipfs, itemToPatch, itemsToAdd);
-        items[itemIndex] = patchedItem;
-        itemsToAdd = [patchedItem];
-        if (itemToPatch.path === '') address = patchedItem.hash;
-      }
-    }
-
-    return Container.load(ipfs, address);
+    const patchedNode = await Container.patchItem(ipfs, rootNode, links);
+    return Container.load(ipfs, patchedNode.hash);
   }
 
   public static async create(ipfs: IPFSClient, writables: ContainerWritable[]): Promise<Container> {
-    const sortedWritables = Container.sortWritablesByPath(writables);
+    Container.validateWritables(writables);
 
-    const contents: ContainerWritableContent[] = sortedWritables.filter(
+    const contents: ContainerWritableContent[] = writables.filter(
       (content) => !!(content as ContainerWritableContent).content
     ) as ContainerWritableContent[];
 
-    const links: ContainerWritableLink[] = sortedWritables.filter(
+    const links: ContainerWritableLink[] = writables.filter(
       (content) => !!(content as ContainerWritableLink).hash
     ) as ContainerWritableLink[];
 
-    const linkDirectories = links
-      .map((link) => Container.getBasename(link.path))
-      .filter((path) => !!path);
-
-    const contentDirectories = contents
-      .map((link) => Container.getBasename(link.path))
-      .filter((path) => !!path);
-
-    const allDirectoriesToInitialize = linkDirectories.filter(
-      (path) => !contentDirectories.includes(path)
-    );
-
-    const directoriesToInitialize = allDirectoriesToInitialize.filter((path) => {
-      const pathIndex = allDirectoriesToInitialize.indexOf(path);
-      const matchedIndex = allDirectoriesToInitialize.findIndex((item) => item.indexOf(path) === 0);
-      return pathIndex === matchedIndex;
-    });
-
     const container = await Container.writeContents(ipfs, [
       ...contents,
-      ...directoriesToInitialize.map((path) => ({
-        path,
-        content: Buffer.from(''),
-      })),
     ]);
 
     return Container.writeLinks(container, links);
-  }
-
-  private static buildPatchPlan(items: ContainerItem[], path: string): ContainerItem[] {
-    const parts = path.split(Container.SEPARATOR);
-    // TODO: this part is suuuuper smelly
-    if (parts[0] !== '') parts.unshift('');
-
-    const steps = parts
-      .map((part, i) => {
-        const pathToMatch = parts.slice(1, i + 1).join(Container.SEPARATOR);
-        const match = items.find((cursor) => cursor.path === pathToMatch);
-        if (!match) throw new Error('Failed to find an ancestor');
-        return match;
-      })
-      .reverse();
-
-    return steps;
   }
 
   private static async patchItem(
@@ -173,15 +94,14 @@ export default class Container {
     item: ContainerItem,
     links: ContainerWritableLink[]
   ) {
-    const linksToAdd = links.filter((link) => Container.getBasename(link.path) === item.path);
-
     let { node } = item;
-    for (const link of linksToAdd) {
+    for (const link of links) {
       const linkName = link.path.replace(item.path, '').replace(/^\//, '');
       if (node.Links.find((nodeLink) => nodeLink.Name === linkName)) {
         node = await (node.constructor as any).rmLink(node, linkName);
       }
 
+      // TODO: Can we add the size here as well so it's more accurate?
       node = await (node.constructor as any).addLink(node, {
         name: linkName,
         hash: link.hash,
@@ -196,32 +116,22 @@ export default class Container {
 
   private static async loadItems(
     ipfs: IPFSClient,
-    address: string,
-    maxDepth: number = 5
+    hash: string,
   ): Promise<ContainerItem[]> {
-    const traverse = async (
-      hash: string,
-      depthLimit: number,
-      base?: string
-    ): Promise<ContainerItem[]> => {
-      if (depthLimit < 0) return [];
-      const node = await ipfs.object.get(hash);
-      const list = [{ hash, path: base || '', node }];
-      if (!node.Links.length) return list;
+    const node = await ipfs.object.get(hash);
+    const list = [{ hash, path: '', node }];
+    if (!node.Links.length) return list;
 
-      for (const link of node.Links) {
-        const linkHash = link.Hash.toString();
-        const linkName = link.Name;
-        const linkPath = compactArray([base, linkName]).join(Container.SEPARATOR);
-        const traversedLink = await traverse(linkHash, depthLimit - 1, linkPath);
-        list.push(...traversedLink);
-      }
+    for (const link of node.Links) {
+      list.push({
+        path: link.Name,
+        hash: link.Hash.toString(),
+        node: await ipfs.object.get(hash)
+      });
+    }
 
-      return list;
-    };
-
-    return traverse(address, maxDepth);
-  }
+    return list;
+}
 
   public static async load(ipfs: IPFSClient, address: string): Promise<Container> {
     const items = await Container.loadItems(ipfs, address);

@@ -22,30 +22,13 @@ describe('Container', () => {
     expect(downloadedFile.content.toString()).toBe(TEST_DATA);
   };
 
-  describe('Container.getBasename', () => {
-    it('should get the base name for a regular file path', () => {
-      expect(Container.getBasename('hello/world/test.txt')).toBe('hello/world');
-      expect(Container.getBasename('/hello/world/test.txt')).toBe('hello/world');
-    });
-
-    it('should get the base name for a file without a directory', () => {
-      expect(Container.getBasename('test.txt')).toBe('');
-      expect(Container.getBasename('/test.txt')).toBe('');
-    });
-
-    it('should get the base name for a directory path', () => {
-      expect(Container.getBasename('hello/world/')).toBe('hello/world');
-      expect(Container.getBasename('/hello/world/')).toBe('hello/world');
-    });
-  });
-
   describe('Container.resolve', () => {
     it('should resolve the path based on the given address', () => {
-      expect(Container.resolve('ADDRESS', 'hello/world/test.txt')).toBe(
-        'ADDRESS/hello/world/test.txt'
+      expect(Container.resolve('ADDRESS', 'test.txt')).toBe(
+        'ADDRESS/test.txt'
       );
-      expect(Container.resolve('ADDRESS', '/hello/world/test.txt')).toBe(
-        'ADDRESS/hello/world/test.txt'
+      expect(Container.resolve('ADDRESS', '/test.txt')).toBe(
+        'ADDRESS/test.txt'
       );
     });
   });
@@ -97,32 +80,6 @@ describe('Container', () => {
       expect(linkItem.hash).not.toBeUndefined();
       await expectHashToContainTestData(Container.resolve(container.address, linkItem.path));
     });
-
-    it('should be able to create a directories recursively', async () => {
-      const container = await Container.create(ipfs, [
-        { path: 'base/content/test.txt', content: writableContent },
-        { path: 'base/link/test.txt', hash: writableLink },
-        { path: 'base/link/directory/test.txt', hash: writableLink },
-      ]);
-
-      const contentItem = container.items.find((item) => item.path === 'base/content/test.txt');
-      const firstLinkItem = container.items.find((item) => item.path === 'base/link/test.txt');
-      const secondLinkItem = container.items.find(
-        (item) => item.path === 'base/link/directory/test.txt'
-      );
-
-      expect(contentItem.path).toBe('base/content/test.txt');
-      expect(contentItem.hash).not.toBeUndefined();
-      await expectHashToContainTestData(Container.resolve(container.address, contentItem.path));
-
-      expect(firstLinkItem.path).toBe('base/link/test.txt');
-      expect(firstLinkItem.hash).not.toBeUndefined();
-      await expectHashToContainTestData(Container.resolve(container.address, firstLinkItem.path));
-
-      expect(secondLinkItem.path).toBe('base/link/directory/test.txt');
-      expect(secondLinkItem.hash).not.toBeUndefined();
-      await expectHashToContainTestData(Container.resolve(container.address, secondLinkItem.path));
-    });
   });
 
   describe('resolve', () => {
@@ -148,19 +105,24 @@ describe('Container', () => {
 
       const initialContainer = await Container.create(ipfs, [
         { path: 'same.txt', content: Buffer.from('STAYS SAME') },
-        { path: 'overwrite.txt', content: Buffer.from('TO BE OVERWRITTEN') },
+        { path: 'overwrite-first.txt', content: Buffer.from('TO BE OVERWRITTEN') },
+        { path: 'overwrite-second.txt', content: Buffer.from('TO BE OVERWRITTEN') },
+
       ]);
       const initialMap = mapContainer(initialContainer);
 
       const patchedContainer = await initialContainer.patch([
-        { path: 'overwrite.txt', content: Buffer.from('OVERWRITTEN') },
+        { path: 'overwrite-first.txt', content: Buffer.from('OVERWRITTEN FIRST') },
+        { path: 'overwrite-second.txt', content: Buffer.from('OVERWRITTEN SECOND') },
         { path: 'new.txt', content: Buffer.from('NEW') },
       ]);
+
       const patchedMap = mapContainer(patchedContainer);
 
       expect(patchedContainer.address).not.toBe(initialContainer.address);
       expect(patchedMap['same.txt']).toBe(initialMap['same.txt']);
-      expect(patchedMap['overwrite.txt']).not.toBe(initialMap['overwrite.txt']);
+      expect(patchedMap['overwrite-first.txt']).not.toBe(initialMap['overwrite-first.txt']);
+      expect(patchedMap['overwrite-second.txt']).not.toBe(initialMap['overwrite-second.txt']);
     });
   });
 });
