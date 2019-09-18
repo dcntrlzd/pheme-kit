@@ -66,7 +66,7 @@ async function example() {
     // content meta
     { title: 'Second Post' },
     // additional files
-    { 'image.svg': 'QmfQkD8pBSBCBxWEwFSu4XaDVSWK6bjnNuaWZjMyQbyDub/static/media/ipfs-logo-text.4831bd1a.svg' }
+    { 'image.svg': 'QmfQkD8pBSBCBxWEwFSu4XaDVSWK6bjnNuaWZjMyQbyDub' }
   ).execute();
 }
 
