@@ -78,15 +78,12 @@ export default class WrappedBlock {
   private ensureContainer() {
     if (!this.isLoaded) throw new Error('Block is not loaded yet.');
     if (!this.containerAddress) {
-      return Container.create(
-        this.storage.writer,
-        [
-          {
-            path: WrappedBlock.BLOCK_FILENAME,
-            hash: this.root,
-          },
-        ]
-      );
+      return Container.create(this.storage.writer, [
+        {
+          path: WrappedBlock.BLOCK_FILENAME,
+          hash: this.root,
+        },
+      ]);
     }
     return this.loadContainer();
   }
@@ -106,11 +103,7 @@ export default class WrappedBlock {
     return new WrappedBlock(storage, address, block);
   }
 
-  public static async create(
-    storage: Storage,
-    block: Block,
-    files: ContainerWritable[] = [],
-  ) {
+  public static async create(storage: Storage, block: Block, files: ContainerWritable[] = []) {
     const contents = [
       ...files.filter((writable) => writable.path !== WrappedBlock.BLOCK_FILENAME),
       {
@@ -123,10 +116,7 @@ export default class WrappedBlock {
     return new WrappedBlock(storage, container.resolve(WrappedBlock.BLOCK_FILENAME), block);
   }
 
-  public async patch(
-    blockPatch: Partial<Block>,
-    files: ContainerWritable[] = [],
-  ) {
+  public async patch(blockPatch: Partial<Block>, files: ContainerWritable[] = []) {
     const patchedBlock = { ...this.block, ...blockPatch };
     const contents = [
       ...files.filter((writable) => writable.path !== WrappedBlock.BLOCK_FILENAME),

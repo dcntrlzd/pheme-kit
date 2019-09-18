@@ -24,12 +24,8 @@ describe('Container', () => {
 
   describe('Container.resolve', () => {
     it('should resolve the path based on the given address', () => {
-      expect(Container.resolve('ADDRESS', 'test.txt')).toBe(
-        'ADDRESS/test.txt'
-      );
-      expect(Container.resolve('ADDRESS', '/test.txt')).toBe(
-        'ADDRESS/test.txt'
-      );
+      expect(Container.resolve('ADDRESS', 'test.txt')).toBe('ADDRESS/test.txt');
+      expect(Container.resolve('ADDRESS', '/test.txt')).toBe('ADDRESS/test.txt');
     });
   });
 
@@ -107,7 +103,6 @@ describe('Container', () => {
         { path: 'same.txt', content: Buffer.from('STAYS SAME') },
         { path: 'overwrite-first.txt', content: Buffer.from('TO BE OVERWRITTEN') },
         { path: 'overwrite-second.txt', content: Buffer.from('TO BE OVERWRITTEN') },
-
       ]);
       const initialMap = mapContainer(initialContainer);
 

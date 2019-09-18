@@ -40,10 +40,10 @@ export default class Container {
 
   private static validateWritables(writables: ContainerWritable[]) {
     writables.forEach((writable) => {
-      if (writable.path.includes(Container.SEPARATOR)){
+      if (writable.path.includes(Container.SEPARATOR)) {
         throw new Error('Directories insides containers are not supported');
       }
-    })
+    });
   }
 
   private static async writeContents(
@@ -65,7 +65,7 @@ export default class Container {
   ): Promise<Container> {
     if (links.length === 0) return Promise.resolve(container);
     const { ipfs } = container;
-    const rootNode = container.items.find(item => item.path === '');
+    const rootNode = container.items.find((item) => item.path === '');
 
     const patchedNode = await Container.patchItem(ipfs, rootNode, links);
     return Container.load(ipfs, patchedNode.hash);
@@ -82,9 +82,7 @@ export default class Container {
       (content) => !!(content as ContainerWritableLink).hash
     ) as ContainerWritableLink[];
 
-    const container = await Container.writeContents(ipfs, [
-      ...contents,
-    ]);
+    const container = await Container.writeContents(ipfs, [...contents]);
 
     return Container.writeLinks(container, links);
   }
@@ -114,10 +112,7 @@ export default class Container {
     return { ...item, node, hash };
   }
 
-  private static async loadItems(
-    ipfs: IPFSClient,
-    hash: string,
-  ): Promise<ContainerItem[]> {
+  private static async loadItems(ipfs: IPFSClient, hash: string): Promise<ContainerItem[]> {
     const node = await ipfs.object.get(hash);
     const list = [{ hash, path: '', node }];
     if (!node.Links.length) return list;
@@ -126,12 +121,12 @@ export default class Container {
       list.push({
         path: link.Name,
         hash: link.Hash.toString(),
-        node: await ipfs.object.get(hash)
+        node: await ipfs.object.get(hash),
       });
     }
 
     return list;
-}
+  }
 
   public static async load(ipfs: IPFSClient, address: string): Promise<Container> {
     const items = await Container.loadItems(ipfs, address);
