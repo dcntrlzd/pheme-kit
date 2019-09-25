@@ -8,7 +8,9 @@
   "dependencies": {
     "@pheme-kit/core": "^0.0.1-alpha.8",
     "@pheme-kit/ethereum": "^0.0.1-alpha.8",
-    "@pheme-kit/storage-ipfs": "^0.0.1-alpha.8"
+    "ethers": "^4.0.27",
+    "ipfsd-ctl": "^0.47.2",
+    "multiaddr-to-uri": "^5.0.0"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.5"

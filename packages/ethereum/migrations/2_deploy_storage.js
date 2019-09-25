@@ -1,5 +1,5 @@
-var Storage = artifacts.require('RegistryStorage');
+const Storage = artifacts.require('RegistryStorage');
 
-module.exports = function(deployer) {
+module.exports = function deployStorage(deployer) {
   deployer.deploy(Storage);
 };

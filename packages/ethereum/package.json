@@ -27,6 +27,6 @@
     "lint": "solium --fix --dir ./contracts"
   },
   "devDependencies": {
-    "ethlint": "^1.2.3"
+    "ethlint": "^1.2.5"
   }
 }

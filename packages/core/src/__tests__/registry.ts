@@ -1,5 +1,5 @@
-import Registry from './index';
-import Contract from '../test/contract';
+import Registry from '../registry';
+import Contract from './mocks/contract';
 
 const HANDLE = 'test';
 

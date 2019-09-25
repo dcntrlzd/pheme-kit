@@ -1,13 +1,12 @@
 import * as ethers from 'ethers';
-import { IRegistry } from '../index';
-import { modifyTask, createTaskFromContractMethod, ITask } from '../task';
 import RegistryAbi from '@pheme-kit/ethereum/artifacts/abi/RegistryV1.json';
+import { modifyTask, createTaskFromContractMethod, Task } from './task';
 
 const stringToBytes = (input: string) => ethers.utils.formatBytes32String(input);
 
 const bytesToString = (input: string) => ethers.utils.parseBytes32String(input);
 
-export default class PhemeRegistry implements IRegistry {
+export default class PhemeRegistry {
   public static attach(
     address: string,
     providerOrSigner: ethers.providers.Provider | ethers.ethers.Signer
@@ -18,39 +17,39 @@ export default class PhemeRegistry implements IRegistry {
 
   public contract: ethers.Contract;
 
-  constructor(contract: ethers.Contract) {
+  public constructor(contract: ethers.Contract) {
     this.contract = contract;
   }
 
-  public register(handle: string): ITask {
+  public register(handle: string): Task {
     return this.createTask('registerHandle', [stringToBytes(handle)]);
   }
 
-  public getPointer(handle: string): ITask<string> {
+  public getPointer(handle: string): Task<string> {
     return this.createTask('getHandlePointer', [stringToBytes(handle)]);
   }
 
-  public setPointer(handle: string, value: string = ''): ITask {
+  public setPointer(handle: string, value = ''): Task {
     return this.createTask('setHandlePointer', [stringToBytes(handle), value]);
   }
 
-  public getProfile(handle: string): ITask<string> {
+  public getProfile(handle: string): Task<string> {
     return this.createTask('getHandleProfile', [stringToBytes(handle)]);
   }
 
-  public setProfile(handle: string, value: string = ''): ITask {
+  public setProfile(handle: string, value = ''): Task {
     return this.createTask('setHandleProfile', [stringToBytes(handle), value]);
   }
 
-  public getOwner(handle: string): ITask<string> {
+  public getOwner(handle: string): Task<string> {
     return this.createTask('getHandleOwner', [stringToBytes(handle)]);
   }
 
-  public setOwner(handle: string, value: string = ''): ITask {
+  public setOwner(handle: string, value = ''): Task {
     return this.createTask('setHandleOwner', [stringToBytes(handle), value]);
   }
 
-  public getHandleAt(index: number): ITask<string> {
+  public getHandleAt(index: number): Task<string> {
     const task = this.createTask('getHandleAt', [index]);
 
     return modifyTask(task, {
@@ -58,11 +57,11 @@ export default class PhemeRegistry implements IRegistry {
     });
   }
 
-  public getHandleCount(): ITask<number> {
+  public getHandleCount(): Task<number> {
     return this.createTask('getHandleCount');
   }
 
-  public getHandleByOwner(owner: string): ITask<string> {
+  public getHandleByOwner(owner: string): Task<string> {
     const task = this.createTask('getHandleByOwner', [owner]);
 
     return modifyTask(task, {
@@ -70,7 +69,7 @@ export default class PhemeRegistry implements IRegistry {
     });
   }
 
-  private createTask(methodName: string, args: any[] = [], options: any = {}): ITask<any> {
+  private createTask(methodName: string, args: any[] = [], options: any = {}): Task<any> {
     return createTaskFromContractMethod(this.contract, methodName, args, options);
   }
 }

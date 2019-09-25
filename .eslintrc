@@ -1,0 +1,38 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier", "json"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "eslint-config-airbnb-base",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
+  "env": {
+    "mocha": true,
+    "jest": true,
+    "node": true
+  },
+  "globals": {
+    "web3": true,
+    "contract": true,
+    "artifacts": true
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "import/no-extraneous-dependencies": "off",
+    "no-await-in-loop": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true, "varsIgnorePattern": "_" }],
+    "no-restricted-syntax": ["error", "LabeledStatement", "WithStatement"],
+    "prettier/prettier": "error"
+  }
+}

@@ -1,11 +1,9 @@
 import assert = require('assert');
 import utils = require('web3-utils');
 
-import { assertTxEvent, assertRejection } from '../utils';
-
 const StorageContract = artifacts.require('EndorsementsStorage');
 
-contract('Endorsements Storage', (accounts) => {
+contract('Endorsements Storage', () => {
   let storage;
 
   const handle = utils.fromUtf8('handle');
