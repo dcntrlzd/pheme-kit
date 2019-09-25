@@ -2,6 +2,7 @@ import Pheme from '@pheme-kit/core/src/pheme';
 
 import * as ethers from 'ethers';
 import IPFSFactory from 'ipfsd-ctl';
+import multiaddrToUri from 'multiaddr-to-uri';
 
 declare let artifacts: any;
 declare let contract: (name: string, callback: (accounts: string[]) => any) => any;
@@ -22,25 +23,21 @@ contract('E2E Test', () => {
     registry = await Registry.deployed();
     provider = new ethers.providers.Web3Provider(registry.constructor.web3.currentProvider);
 
-    ipfsServer = await new Promise((resolve, reject) => {
-      IPFSFactory.create().spawn((err, ipfsd) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    const ipfsFactory = await IPFSFactory.create();
+    ipfsServer = await ipfsFactory.spawn();
 
-        resolve(ipfsd);
-      });
-    });
-
-    pheme = Pheme.create({
+    const config = {
       providerOrSigner: provider.getSigner(),
       contractAddress: registry.address,
-      ipfsApiUrl: `http://${ipfsServer.api.apiHost}:${ipfsServer.api.apiPort}`,
-      ipfsGatewayUrl: `http://${ipfsServer.api.gatewayHost}:${ipfsServer.api.gatewayPort}`,
-      // ipfsApiUrl: `http://localhost:5001`,
-      // ipfsGatewayUrl: `http://localhost:5000`,
-    });
+      ipfsApiUrl: multiaddrToUri(ipfsServer.apiAddr),
+      ipfsGatewayUrl: multiaddrToUri(ipfsServer.gatewayAddr),
+    };
+
+    pheme = Pheme.create(config);
+  });
+
+  after(async () => {
+    await ipfsServer.stop();
   });
 
   it('should be able to create, read and modify feeds', async () => {

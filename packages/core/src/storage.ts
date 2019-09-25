@@ -65,7 +65,7 @@ export default class Storage {
     return Buffer.from(data);
   }
 
-  public async write(data: any, onlyHash: boolean = false) {
+  public async write(data: any, onlyHash = false) {
     const [{ hash }] = await this.writer.add(data, { onlyHash, recursive: true });
     return hash;
   }
@@ -75,7 +75,7 @@ export default class Storage {
     return Storage.deserialize(data.toString());
   }
 
-  public async writeObject(object: any, onlyHash: boolean = false): Promise<string> {
+  public async writeObject(object: any, onlyHash = false): Promise<string> {
     return this.write(Buffer.from(Storage.serialize(object)), onlyHash);
   }
 }

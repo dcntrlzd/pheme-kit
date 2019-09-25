@@ -29,7 +29,7 @@ export default class PhemeRegistry {
     return this.createTask('getHandlePointer', [stringToBytes(handle)]);
   }
 
-  public setPointer(handle: string, value: string = ''): Task {
+  public setPointer(handle: string, value = ''): Task {
     return this.createTask('setHandlePointer', [stringToBytes(handle), value]);
   }
 
@@ -37,7 +37,7 @@ export default class PhemeRegistry {
     return this.createTask('getHandleProfile', [stringToBytes(handle)]);
   }
 
-  public setProfile(handle: string, value: string = ''): Task {
+  public setProfile(handle: string, value = ''): Task {
     return this.createTask('setHandleProfile', [stringToBytes(handle), value]);
   }
 
@@ -45,7 +45,7 @@ export default class PhemeRegistry {
     return this.createTask('getHandleOwner', [stringToBytes(handle)]);
   }
 
-  public setOwner(handle: string, value: string = ''): Task {
+  public setOwner(handle: string, value = ''): Task {
     return this.createTask('setHandleOwner', [stringToBytes(handle), value]);
   }
 
