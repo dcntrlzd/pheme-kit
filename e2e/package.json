@@ -1,13 +1,13 @@
 {
   "name": "e2e",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.2-alpha.0",
   "private": true,
   "scripts": {
     "test": "truffle test"
   },
   "dependencies": {
-    "@pheme-kit/core": "^0.0.1-alpha.8",
-    "@pheme-kit/ethereum": "^0.0.1-alpha.8",
+    "@pheme-kit/core": "^0.0.2-alpha.0",
+    "@pheme-kit/ethereum": "^0.0.2-alpha.0",
     "ethers": "^4.0.27",
     "ipfsd-ctl": "^0.47.2",
     "multiaddr-to-uri": "^5.0.0"
