@@ -3,14 +3,14 @@
   "version": "0.0.1-alpha.8",
   "description": "Pheme Kit core library",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
-  "homepage": "https://github.com/dcntrlzd/pheme-protocol",
+  "homepage": "https://github.com/dcntrlzd/pheme-kit",
   "license": "MIT",
   "directories": {
     "lib": "lib"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dcntrlzd/pheme-protocol.git"
+    "url": "git+https://github.com/dcntrlzd/pheme-kit.git"
   },
   "files": [
     "index.js",
