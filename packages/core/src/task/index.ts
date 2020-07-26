@@ -44,7 +44,7 @@ export const createTaskFromContractMethod = (
     {
       estimate: (context) =>
         Promise.all([
-          contract.estimate[methodName](...args, options),
+          contract.estimateGas[methodName](...args, options),
           contract.provider.getGasPrice(),
         ]).then(([gasCost, gasPrice]) => gasCost.mul(gasPrice)),
       execute: (context) => {
