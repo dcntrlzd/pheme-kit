@@ -33,9 +33,7 @@ export default class PhemeTestRegistry implements IRegistry {
   );
 
   public getLatestHandles = mockTask((limit) => {
-    const handles = Object.keys(this.records)
-      .reverse()
-      .splice(0, limit);
+    const handles = Object.keys(this.records).reverse().splice(0, limit);
     return Promise.resolve(handles);
   });
 

@@ -25,20 +25,16 @@ describe('PhemeStorageIPFS', () => {
     (instance.ipfs.add as any).mockImplementation((object: Buffer) => {
       const path = uuid().replace(/-/gi, '');
       repo[path] = object;
-      return Promise.resolve([
-        {
-          path,
-          hash: path,
-          size: object.byteLength,
-        },
-      ]);
+      return Promise.resolve({
+        path,
+        cid: { toString: () => path },
+        size: object.byteLength,
+      });
     });
   });
 
   it('should initialize without an issue', async () => {
-    expect(IPFS).toHaveBeenCalledWith('localhost', '5001', {
-      protocol: 'http',
-    });
+    expect(IPFS).toHaveBeenCalledWith('http://localhost:5001');
     expect(instance).toBeDefined();
   });
 

@@ -26,6 +26,6 @@
   "dependencies": {
     "@pheme-kit/core": "^0.0.1-alpha.8",
     "axios": "^0.18.0",
-    "ipfs-http-client": "^28.1.1"
+    "ipfs-http-client": "^45.0.0"
   }
 }

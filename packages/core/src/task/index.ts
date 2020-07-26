@@ -3,16 +3,16 @@ import * as ethers from 'ethers';
 export interface ITask<T = void> {
   context: any;
   execute: (parentContext?: any) => Promise<T>;
-  estimate: (parentContext?: any) => Promise<ethers.utils.BigNumber>;
+  estimate: (parentContext?: any) => Promise<ethers.BigNumber>;
 }
 
 export const createTask = <Y>(
   {
     execute,
-    estimate = () => Promise.resolve(ethers.utils.bigNumberify(0)),
+    estimate = () => Promise.resolve(ethers.BigNumber.from(0)),
   }: {
     execute: (context: any) => Promise<Y>;
-    estimate?: (context: any) => Promise<ethers.utils.BigNumber>;
+    estimate?: (context: any) => Promise<ethers.BigNumber>;
   },
   context = {}
 ): ITask<Y> => ({
@@ -48,7 +48,7 @@ export const createTaskFromContractMethod = (
           contract.provider.getGasPrice(),
         ]).then(([gasCost, gasPrice]) => gasCost.mul(gasPrice)),
       execute: (context) => {
-        const transaction = contract.functions[methodName](...args, options);
+        const transaction = contract[methodName](...args, options);
         transaction.then((tx) => {
           context.txHash = tx.hash;
         });

@@ -1,5 +1,4 @@
 import { IStorage } from '@pheme-kit/core';
-import * as URL from 'url';
 import IPFS from 'ipfs-http-client';
 import axios from 'axios';
 
@@ -9,9 +8,16 @@ export interface IDAGNode {
   multihash: number[];
 }
 
+export interface IIPFSCID {
+  version: number;
+  codec: string;
+  multibaseName: string;
+  toString: () => string;
+}
+
 export interface IIPFSFileReference {
   path: string;
-  hash: string;
+  cid: IIPFSCID;
   size: number;
 }
 
@@ -37,7 +43,7 @@ export interface IIPFSClient {
     ls: (hash?: string, options?: any) => Promise<Array<{ hash: string; type: string }>>;
     rm: (hash, options?: any) => Promise<void>;
   };
-  add: (object: Buffer, options?: any) => Promise<IIPFSFileReference[]>;
+  add: (object: Buffer, options?: any) => Promise<IIPFSFileReference>;
   get: (ipfsPath: string) => Promise<IIPFSFileResponse[]>;
 }
 
@@ -49,12 +55,8 @@ export default class PhemeStorageIPFS implements IStorage {
   public readonly gatewayUrl: string;
 
   constructor(rpcUrl: string, gatewayUrl: string) {
-    const uri = URL.parse(rpcUrl);
-
     this.gatewayUrl = gatewayUrl;
-    this.ipfs = IPFS(uri.hostname, uri.port || '5001', {
-      protocol: (uri.protocol || 'http').replace(/\:$/, ''),
-    }) as IIPFSClient;
+    this.ipfs = IPFS(rpcUrl) as IIPFSClient;
   }
 
   public addressForEstimation = () => 'ipfs://qmv8ndh7ageh9b24zngaextmuhj7aiuw3scc8hkczvjkww';
@@ -86,8 +88,8 @@ export default class PhemeStorageIPFS implements IStorage {
   }
 
   public async writeData(data: Buffer) {
-    const [{ hash }] = await this.ipfs.add(data);
-    return `ipfs://${hash}`;
+    const result = await this.ipfs.add(data);
+    return `ipfs://${result.cid.toString()}`;
   }
 
   public async readObject(address: string): Promise<any> {
