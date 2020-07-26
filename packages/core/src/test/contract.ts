@@ -38,7 +38,7 @@ const Contract: any = jest.fn(() => {
       storage[handle] = { ...storage[handle], owner };
       return Promise.resolve({ hash: 'TX_HASH' });
     }),
-    estimate: {
+    estimateGas: {
       getHandlePointer: jest.fn(() => Promise.resolve(new BigNumber(0))),
       getHandleProfile: jest.fn(() => Promise.resolve(new BigNumber(0))),
       getHandleOwner: jest.fn(() => Promise.resolve(new BigNumber(0))),
