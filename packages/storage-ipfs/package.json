@@ -1,6 +1,6 @@
 {
   "name": "@pheme-kit/storage-ipfs",
-  "version": "0.0.1-alpha.9",
+  "version": "0.0.1-alpha.10",
   "description": "Pheme Kit IPFS storage adapter",
   "author": "Baris Gumustas <barisg@dcntrlzd.io>",
   "homepage": "https://github.com/dcntrlzd/pheme-protocol",
@@ -24,7 +24,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@pheme-kit/core": "^0.0.1-alpha.9",
+    "@pheme-kit/core": "^0.0.1-alpha.10",
     "axios": "^0.18.0",
     "ipfs-http-client": "^45.0.0"
   },

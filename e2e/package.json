@@ -1,14 +1,14 @@
 {
   "name": "e2e",
-  "version": "0.0.1-alpha.9",
+  "version": "0.0.1-alpha.10",
   "private": true,
   "scripts": {
     "test": "truffle test"
   },
   "dependencies": {
-    "@pheme-kit/core": "^0.0.1-alpha.9",
-    "@pheme-kit/ethereum": "^0.0.1-alpha.9",
-    "@pheme-kit/storage-ipfs": "^0.0.1-alpha.9"
+    "@pheme-kit/core": "^0.0.1-alpha.10",
+    "@pheme-kit/ethereum": "^0.0.1-alpha.10",
+    "@pheme-kit/storage-ipfs": "^0.0.1-alpha.10"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.5"
