@@ -36,5 +36,6 @@
   "dependencies": {
     "@pheme-kit/ethereum": "^0.0.1-alpha.9",
     "uuid": "^3.3.2"
-  }
+  },
+  "gitHead": "94e4927563ee56cdcb0def3c950bbf86a03e0d2b"
 }

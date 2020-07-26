@@ -27,5 +27,6 @@
     "@pheme-kit/core": "^0.0.1-alpha.9",
     "axios": "^0.18.0",
     "ipfs-http-client": "^45.0.0"
-  }
+  },
+  "gitHead": "94e4927563ee56cdcb0def3c950bbf86a03e0d2b"
 }

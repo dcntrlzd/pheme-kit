@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "module": "commonjs",
     "target": "es2015",
+    "skipLibCheck": true,
     "jsx": "react",
     "lib": ["es6","es7", "dom"],
     "baseUrl": "."
