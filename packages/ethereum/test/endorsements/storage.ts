@@ -1,14 +1,12 @@
 import assert = require('assert');
-import utils = require('web3-utils');
-
-import { assertTxEvent, assertRejection } from '../utils';
+import * as ethers from 'ethers';
 
 const StorageContract = artifacts.require('EndorsementsStorage');
 
 contract('Endorsements Storage', (accounts) => {
   let storage;
 
-  const handle = utils.fromUtf8('handle');
+  const handle = ethers.utils.formatBytes32String('handle');
   const uuid = '70a77f55-b53a-4166-8016-adb885c7f62b';
   const endorser = '0x63a60F403AA3C7fEaf94Ec98647D46EcD3638e4f';
 
@@ -31,7 +29,7 @@ contract('Endorsements Storage', (accounts) => {
   });
 
   describe('Getters and Setters', () => {
-    const valueKey = utils.fromUtf8('valueKey');
+    const valueKey = ethers.utils.formatBytes32String('valueKey');
     let recordId;
 
     before(async () => {

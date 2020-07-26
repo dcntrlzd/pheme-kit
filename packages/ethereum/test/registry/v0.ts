@@ -1,6 +1,5 @@
 import assert = require('assert');
-import utils = require('web3-utils');
-
+import * as ethers from 'ethers';
 import { assertTxEvent, assertRejection } from '../utils';
 
 const RegistryContract = artifacts.require('RegistryV1');
@@ -13,7 +12,7 @@ contract('Registry v0', (accounts) => {
   let owner;
   let otherUser;
 
-  const handle = utils.fromUtf8('test');
+  const handle = ethers.utils.formatBytes32String('test').replace(/0+$/, '');
   const paddedHandle = handle.padEnd(66, '0');
 
   before(async () => {
